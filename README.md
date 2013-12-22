@@ -11,6 +11,17 @@ same as your application name (using getenv('OPENSHIFT_APP_NAME')).  You can nam
 your application whatever you want.  However, the name of the database will always
 match the application so you might have to update .openshift/action_hooks/build.
 
+Overview wordpress nightly
+--------------------------
+
+Development of WordPress moves fairly quickly and day-to-day things break as often as they are fixed. This high churn is part of our development process that aims to produce the most stable releases possible.
+
+You can [track changes on the web](http://core.trac.wordpress.org/timeline) or through [our SVN mailing list](http://lists.automattic.com/mailman/listinfo/wp-svn) but many people choose to run the nightly builds to help us identify bugs. If you would like to be part of this process, please [join the WP Testers mailing list](http://lists.automattic.com/mailman/listinfo/wp-testers) and [download the latest nightly build.](http://wordpress.org/nightly-builds/wordpress-latest.zip)
+
+WP's automatic upgrade can be used to automatically upgrade to betas and nightly builds for the development branch or the latest stable branch. To get onto a development upgrade path, install the [WordPress Beta Tester](http://wordpress.org/extend/plugins/wordpress-beta-tester/) plugin.
+
+The first time you access the app you'll be asked to set a username and password and give your blog a name. Be sure to track security updates from upstream.
+
 
 Running on OpenShift
 --------------------
