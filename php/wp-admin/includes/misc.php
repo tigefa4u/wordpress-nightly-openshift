@@ -562,16 +562,16 @@ function saveDomDocument($doc, $filename) {
  * @since 3.0.0
  */
 function admin_color_scheme_picker() {
-	global $_wp_admin_css_colors, $user_id;
+	global $_wp_admin_css_colors;
 
 	ksort( $_wp_admin_css_colors );
 
 	if ( isset( $_wp_admin_css_colors['fresh'] ) ) {
-		// Set 'fresh' (the default option) to be the first array element
-		$_wp_admin_css_colors = array_merge( array( 'fresh' => '' ), $_wp_admin_css_colors );
+		// Set Default ('fresh') and Light should go first.
+		$_wp_admin_css_colors = array_filter( array_merge( array( 'fresh' => '', 'light' => '' ), $_wp_admin_css_colors ) );
 	}
 
-	$current_color = get_user_option( 'admin_color', $user_id );
+	$current_color = get_user_option( 'admin_color' );
 
 	if ( empty( $current_color ) || ! isset( $_wp_admin_css_colors[ $current_color ] ) ) {
 		$current_color = 'fresh';
@@ -581,7 +581,7 @@ function admin_color_scheme_picker() {
 	<fieldset id="color-picker" class="scheme-list">
 		<legend class="screen-reader-text"><span><?php _e( 'Admin Color Scheme' ); ?></span></legend>
 		<?php
-
+		wp_nonce_field( 'save-color-scheme', 'color-nonce', false );
 		foreach ( $_wp_admin_css_colors as $color => $color_info ) :
 
 			?>
@@ -596,7 +596,7 @@ function admin_color_scheme_picker() {
 
 					foreach ( $color_info->colors as $html_color ) {
 						?>
-						<td style="background-color: <?php echo esc_attr( $html_color ); ?>" title="<?php echo esc_attr( $color ); ?>">&nbsp;</td>
+						<td style="background-color: <?php echo esc_attr( $html_color ); ?>">&nbsp;</td>
 						<?php
 					}
 
@@ -751,9 +751,12 @@ function wp_refresh_post_nonces( $response, $data, $screen_id ) {
 add_filter( 'heartbeat_received', 'wp_refresh_post_nonces', 10, 3 );
 
 /**
- * Disable suspending of Heartbeat on the Add/Edit Post screens
+ * Disable suspension of Heartbeat on the Add/Edit Post screens.
  *
- * @since 3.8
+ * @since 3.8.0
+ *
+ * @param array $settings An array of Heartbeat settings.
+ * @return array Filtered Heartbeat settings.
  */
 function wp_heartbeat_set_suspension( $settings ) {
 	global $pagenow;

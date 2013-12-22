@@ -19,6 +19,14 @@
 	-webkit-font-smoothing: subpixel-antialiased; /* Prevent Safari from switching to standard antialiasing on hover */
 }
 
+.rtl #wpadminbar * {
+	font-family: Tahoma, sans-serif;
+}
+
+html:lang(he-il) .rtl #wpadminbar *  {
+ 	font-family: Arial, sans-serif;
+}
+
 #wpadminbar a.ab-item,
 #wpadminbar > #wp-toolbar span.ab-label,
 #wpadminbar > #wp-toolbar span.noticon {
@@ -120,8 +128,12 @@
 #wpadminbar .shortlink-input {
 	height: 32px;
 	display: block;
-	padding: 0 8px 0 7px;
+	padding: 0 10px;
 	margin: 0;
+}
+
+#wpadminbar .quicklinks > ul > li > a {
+	padding: 0 8px 0 7px;
 }
 
 #wpadminbar .menupop .ab-sub-wrapper,
@@ -232,6 +244,11 @@
 #wpadminbar .ab-item:before,
 #wpadminbar #adminbarsearch:before {
 	color: #999;
+}
+
+#wpadminbar .ab-icon:before,
+#wpadminbar .ab-item:before,
+#wpadminbar #adminbarsearch:before {
 	position: relative;
 	-moz-transition: all .1s ease-in-out;
 	-webkit-transition: all .1s ease-in-out;
@@ -354,6 +371,19 @@
  */
 #wp-admin-bar-my-account > ul {
 	min-width: 198px;
+}
+
+#wp-admin-bar-my-account > .ab-item:before {
+	content: "\f110";
+	top: 2px;
+	float: right;
+	margin-left: 6px;
+	margin-right: 0;
+}
+
+#wp-admin-bar-my-account.with-avatar > .ab-item:before {
+	display: none;
+	content: none;
 }
 
 #wp-admin-bar-my-account.with-avatar > ul {
@@ -481,7 +511,7 @@
 }
 
 #wpadminbar #wp-admin-bar-site-name > .ab-item:before {
-	content: '\f319';
+	content: "\f102";
 }
 
 
@@ -679,6 +709,47 @@
 	background-image: none;
 }
 
+/* No @font-face support */
+.no-font-face #wpadminbar ul.ab-top-menu > li > a.ab-item {
+	display: block;
+	width: 45px;
+	text-align: center;
+	overflow: hidden;
+	margin: 0 3px;
+}
+
+.no-font-face #wpadminbar #wp-admin-bar-my-sites > .ab-item,
+.no-font-face #wpadminbar #wp-admin-bar-site-name > .ab-item,
+.no-font-face #wpadminbar #wp-admin-bar-edit > .ab-item {
+	text-indent: 0;
+}
+
+.no-font-face #wpadminbar .ab-icon,
+.no-font-face #wpadminbar .ab-icon:before,
+.no-font-face #wpadminbar a.ab-item:before,
+.no-font-face #wpadminbar #wp-admin-bar-wp-logo > .ab-item {
+	display: none !important;
+}
+
+.no-font-face #wpadminbar ul.ab-top-menu > li > a > span.ab-label {
+	display: inline;
+}
+
+.no-font-face #wpadminbar #wp-admin-bar-menu-toggle span.ab-icon {
+	display: inline !important;
+}
+
+.no-font-face #wpadminbar #wp-admin-bar-menu-toggle span.ab-icon:before {
+	content: "Menu";
+	font: 14px/45px sans-serif !important;
+	display: inline-block !important;
+	color: #fff;
+}
+
+.no-font-face #wpadminbar #wp-admin-bar-site-name a.ab-item {
+	color: #fff;
+}
+/* End no @font-face */
 
 @media screen and ( max-width: 782px ) {
 	/* Toolbar Touchification*/
@@ -688,12 +759,14 @@
 		height: 46px;
 		min-width: 300px;
 
+	/*	These rules break dropdown tappability on Chrome/Android.
 		-webkit-transform: translate3d(0, 0, 0);
 		-webkit-backface-visibility: hidden;
 		-webkit-transition: 0;
 		transform: translate3d(0, 0, 0);
 		backface-visibility: hidden;
 		transition: 0;
+	*/
 	}
 
 	#wpadminbar * {
@@ -765,7 +838,7 @@
 
 	#wpadminbar #wp-admin-bar-wp-logo > .ab-item .ab-icon {
 		padding: 0;
-		width: 50px;
+		width: 55px;
 		height: 46px;
 		text-align: center;
 		vertical-align: top;
@@ -784,11 +857,12 @@
 	/* My Sites and "Site Title" menu */
 	#wpadminbar #wp-admin-bar-my-sites > .ab-item,
 	#wpadminbar #wp-admin-bar-site-name > .ab-item,
-	#wpadminbar #wp-admin-bar-edit > .ab-item {
+	#wpadminbar #wp-admin-bar-edit > .ab-item,
+	#wpadminbar #wp-admin-bar-my-account > .ab-item {
 		text-indent: 100%;
 		white-space: nowrap;
 		overflow: hidden;
-		width: 50px;
+		width: 55px;
 		padding: 0;
 		color: #999;
 		position: relative;
@@ -803,13 +877,14 @@
 	
 	#wpadminbar #wp-admin-bar-edit > .ab-item:before,
 	#wpadminbar #wp-admin-bar-my-sites > .ab-item:before,
-	#wpadminbar #wp-admin-bar-site-name > .ab-item:before {
+	#wpadminbar #wp-admin-bar-site-name > .ab-item:before,
+	#wpadminbar #wp-admin-bar-my-account > .ab-item:before {
 		display: block;
 		text-indent: 0;
 		font: normal 32px/1 'dashicons';
 		speak: none;
 		top: 7px;
-		width: 50px;
+		width: 55px;
 		text-align: center;
 		-webkit-font-smoothing: antialiased;
 		-moz-osx-font-smoothing: grayscale;
@@ -906,21 +981,9 @@
 		margin-bottom: -2px;
 	}
 
-	/* Hide all third party items */
-	#wpadminbar li {
+	/* Show only default top level items */
+	#wp-toolbar > ul > li {
 		display: none;
-	}
-	
-	/* Allow dropdown list items to appear normally */
-	#wpadminbar li:hover ul li,
-	#wpadminbar li:hover ul li:hover ul li {
-		display: list-item;
-	}
-	
-	/* Override default min-width so dropdown lists aren't stretched
-		to 100% viewport width at responsive sizes. */
-	#wpadminbar .ab-top-menu > .menupop > .ab-sub-wrapper {
-		min-width: intrinsic;
 	}
 
 	#wpadminbar li#wp-admin-bar-menu-toggle,
@@ -934,6 +997,22 @@
 	#wpadminbar li#wp-admin-bar-new-content,
 	#wpadminbar li#wp-admin-bar-my-account {
 		display: block;
+	}
+
+	/* Allow dropdown list items to appear normally */
+	#wpadminbar li:hover ul li,
+	#wpadminbar li.hover ul li,
+	#wpadminbar li:hover ul li:hover ul li {
+		display: list-item;
+	}
+	
+	/* Override default min-width so dropdown lists aren't stretched
+		to 100% viewport width at responsive sizes. */
+	#wpadminbar .ab-top-menu > .menupop > .ab-sub-wrapper {
+		min-width: intrinsic;
+		min-width: -webkit-fit-content;
+		min-width: -moz-fit-content;
+		min-width: fit-content;
 	}
 
 	#wpadminbar ul#wp-admin-bar-root-default > li {
@@ -954,29 +1033,13 @@
 		position: static;
 	}
 
-	#wpadminbar #wp-admin-bar-comments,
-	#wpadminbar #wp-admin-bar-new-content,
 	#wpadminbar #wp-admin-bar-my-account {
 		float: right;
 	}
 
-	#wpadminbar #wp-admin-bar-comments .ab-sub-wrapper,
-	#wpadminbar #wp-admin-bar-new-content .ab-sub-wrapper,
 	#wpadminbar #wp-admin-bar-my-account .ab-sub-wrapper {
 		right: 0;
 		left: auto;
-	}
-
-	#wpadminbar ul#wp-admin-bar-root-default > li#wp-admin-bar-comments {
-		margin-right: 100px;
-	}
-
-	#wpadminbar ul#wp-admin-bar-root-default > li#wp-admin-bar-new-content {
-		margin-right: -98px;
-	}
-
-	#wpadminbar ul#wp-admin-bar-top-secondary > li#wp-admin-bar-my-account {
-		margin-right: -150px;
 	}
 
 	.network-admin #wpadminbar ul#wp-admin-bar-top-secondary > li#wp-admin-bar-my-account {
@@ -1014,7 +1077,6 @@
 	}
 	
 	#wpadminbar .ab-top-menu > .menupop li > .ab-sub-wrapper {
-		display: inline-block;
 		margin: 0;
 		width: 100%;
 		top: auto;

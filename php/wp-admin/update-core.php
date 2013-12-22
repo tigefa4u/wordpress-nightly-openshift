@@ -459,32 +459,38 @@ if ( ( 'do-theme-upgrade' == $action || ( 'do-plugin-upgrade' == $action && ! is
 $title = __('WordPress Updates');
 $parent_file = 'tools.php';
 
-get_current_screen()->add_help_tab( array(
-'id'		=> 'overview',
-'title'		=> __('Overview'),
-'content'	=>
-	'<p>' . __('This screen lets you update to the latest version of WordPress as well as update your themes and plugins from the WordPress.org repository. When updates are available, the number of available updates will appear in a bubble on the left hand menu as a notification.') . '</p>' .
-	'<p>' . __('It is very important to keep your WordPress installation up to date for security reasons, so when you see a number appear, make sure you take the time to update, which is an easy process.') . '</p>'
-) );
+$updates_overview  = '<p>' . __( 'On this screen, you can update to the latest version of WordPress, as well as update your themes and plugins from the WordPress.org repositories.' ) . '</p>';
+$updates_overview .= '<p>' . __( 'If an update is available, you&#8127;ll see a notification appear in the Toolbar and navigation menu.' ) . ' ' . __( 'Keeping your site up to date is important for your site&#8217;s security, and makes the internet a safer place for you and your readers.' ) . '</p>';
 
 get_current_screen()->add_help_tab( array(
-'id'		=> 'how-to-update',
-'title'		=> __('How to Update'),
-'content'	=>
-	'<p>' . __('Updating your WordPress installation is a simple one-click procedure; just click on the Update button when it says a new version is available.') . '</p>' .
-	'<p>' . __('To update themes or plugins from this screen, use the checkboxes to make your selection and click on the appropriate Update button. Check the box at the top of the Themes or Plugins section to select all and update them all at once.') . '</p>'
+	'id'      => 'overview',
+	'title'   => __( 'Overview' ),
+	'content' => $updates_overview
+) );
+
+$updates_howto  = '<p>' . __( '<strong>WordPress</strong> &mdash; Updating your WordPress installation is a simple one-click procedure: just <strong>click on the &#8220;Update Now&#8221; button</strong> when you are notified that a new version is available.' ) . ' ' . __( 'In most cases, WordPress will automatically apply maintenance and security updates in the background for you.' ) . '</p>';
+$updates_howto .= '<p>' . __( '<strong>Themes and Plugins</strong> &mdash; To update individual themes or plugins from this screen, use the checkboxes to make your selection, then <strong>click on the appropriate &#8220;Update&#8221; button</strong>. To update all of your themes or plugins at once, you can check the box at the top of the section to select all before clicking the update button.' ) . '</p>';
+
+if ( 'en_US' != get_locale() ) {
+	$updates_howto .= '<p>' . __( '<strong>Translations</strong> &mdash; The files translating WordPress into your language are updated for you whenever any other updates occur. But if these files are out of date, you can <strong>click the &#8220;Update Translations&#8221;</strong> button.' ) . '</p>';
+}
+
+get_current_screen()->add_help_tab( array(
+	'id'      => 'how-to-update',
+	'title'   => __( 'How to Update' ),
+	'content' => $updates_howto
 ) );
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
-	'<p>' . __('<a href="http://codex.wordpress.org/Dashboard_Updates_Screen" target="_blank">Documentation on Updating WordPress</a>') . '</p>' .
-	'<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+	'<p>' . __( '<a href="http://codex.wordpress.org/Dashboard_Updates_Screen" target="_blank">Documentation on Updating WordPress</a>' ) . '</p>' .
+	'<p>' . __( '<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>' ) . '</p>'
 );
 
 if ( 'upgrade-core' == $action ) {
 	// Force a update check when requested
 	$force_check = ! empty( $_GET['force-check'] );
-	wp_version_check( array(), $force_check ); 
+	wp_version_check( array(), $force_check );
 
 	require_once(ABSPATH . 'wp-admin/admin-header.php');
 	?>

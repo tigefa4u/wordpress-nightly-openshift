@@ -184,45 +184,77 @@ function wp_dashboard_right_now() {
 	<div class="main">
 	<ul>
 	<?php
-	do_action( 'rightnow_list_start' );
-	// Using show_in_nav_menus as my arg for grabbing what post types should show, is there better?
-	$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
-	$post_types = (array) apply_filters( 'rightnow_post_types', $post_types );
-	foreach ( $post_types as $post_type => $post_type_obj ){
+	// Posts and Pages
+	foreach ( array( 'post', 'page' ) as $post_type ) {
 		$num_posts = wp_count_posts( $post_type );
 		if ( $num_posts && $num_posts->publish ) {
-			printf(
-				'<li class="%1$s-count"><a href="edit.php?post_type=%1$s">%2$s %3$s</a></li>',
-				$post_type,
-				number_format_i18n( $num_posts->publish ),
-				$post_type_obj->label
-			);
+			if ( 'post' == $post_type ) {
+				$text = _n( '%s Post', '%s Posts', $num_posts->publish );
+			} else {
+				$text = _n( '%s Page', '%s Pages', $num_posts->publish );
+			}
+			$text = sprintf( $text, number_format_i18n( $num_posts->publish ) );
+			printf( '<li class="%1$s-count"><a href="edit.php?post_type=%1$s">%2$s</a></li>', $post_type, $text );
 		}
 	}
 	// Comments
 	$num_comm = wp_count_comments();
 	if ( $num_comm && $num_comm->total_comments ) {
-		$text = _n( 'comment', 'comments', $num_comm->total_comments );
-		printf(
-			'<li class="comment-count"><a href="edit-comments.php">%1$s %2$s</a></li>',
-			number_format_i18n( $num_comm->total_comments ),
-			$text
-		);
+		$text = sprintf( _n( '%s Comment', '%s Comments', $num_comm->total_comments ), number_format_i18n( $num_comm->total_comments ) );
+		?>
+		<li class="comment-count"><a href="edit-comments.php"><?php echo $text; ?></a></li>
+		<?php
 		if ( $num_comm->moderated ) {
-			$text = _n( 'in moderation', 'in moderation', $num_comm->total_comments );
-			printf(
-				'<li class="comment-mod-count"><a href="edit-comments.php?comment_status=moderated">%1$s %2$s</a></li>',
-				number_format_i18n( $num_comm->moderated ),
-				$text
-			);
+			/* translators: Number of comments in moderation */
+			$text = sprintf( _nx( '%s in moderation', '%s in moderation', $num_comm->moderated, 'comments' ), number_format_i18n( $num_comm->moderated ) );
+			?>
+			<li class="comment-mod-count"><a href="edit-comments.php?comment_status=moderated"><?php echo $text; ?></a></li>
+			<?php
 		}
 	}
-	do_action( 'rightnow_list_end' );
+
+	/**
+	 * Include additional elements in the 'At a Glance' dashboard widget.
+	 * This widget was previously 'Right Now'.
+	 *
+	 * @since 3.8.0
+	 * @param array $items Array of items.
+	 */
+	$elements = apply_filters( 'dashboard_glance_items', array() );
+	if ( $elements ) {
+		echo '<li>' . implode( "</li>\n<li>", $elements ) . "</li>\n";
+	}
+
 	?>
 	</ul>
 	<p><?php printf( __( 'WordPress %1$s running %2$s theme.' ), get_bloginfo( 'version', 'display' ), $theme_name ); ?></p>
-	</div>
+	<?php
 
+	// Check if search engines are asked not to index this site.
+	if ( ! is_network_admin() && ! is_user_admin() && current_user_can( 'manage_options' ) && '1' != get_option( 'blog_public' ) ) {
+
+		/**
+		 * Filter the title attribute for the link displayed in Site Content metabox when search engines are discouraged from indexing the site.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param string Default attribute text.
+		 */
+		$title = apply_filters( 'privacy_on_link_title', __( 'Your site is asking search engines not to index its content' ) );
+
+		/**
+		 * Filter the text for the link displayed in Site Content metabox when search engines are discouraged from indexing the site.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param string Default text.
+		 */
+		$content = apply_filters( 'privacy_on_link_text' , __( 'Search Engines Discouraged' ) );
+
+		echo "<p><a href='options-reading.php' title='$title'>$content</a></p>";
+	}
+	?>
+	</div>
 	<?php
 	// activity_box_end has a core action, but only prints content when multisite.
 	// Using an output buffer is the only way to really check if anything's displayed here.
@@ -290,7 +322,7 @@ function wp_network_dashboard_right_now() {
  *
  * @since 3.8.0
  *
- * @param string $error_msg Error message.
+ * @param string $error_msg Optional. Error message. Default false.
  */
 function wp_dashboard_quick_press( $error_msg = false ) {
 	global $post_ID;
@@ -323,12 +355,12 @@ function wp_dashboard_quick_press( $error_msg = false ) {
 		<?php endif; ?>
 
 		<div class="input-text-wrap" id="title-wrap">
-			<label class="screen-reader-text prompt" for="title" id="title-prompt-text"><?php _e( 'What&#8217;s on your mind?' ); ?></label>
+			<label class="screen-reader-text prompt" for="title" id="title-prompt-text"><?php echo apply_filters( 'enter_title_here', __( 'Title' ), $post ); ?></label>
 			<input type="text" name="post_title" id="title" autocomplete="off" />
 		</div>
 
 		<div class="textarea-wrap" id="description-wrap">
-			<label class="screen-reader-text prompt" for="content" id="content-prompt-text"><?php _e( 'Enter a description' ); ?></label>
+			<label class="screen-reader-text prompt" for="content" id="content-prompt-text"><?php _e( 'What&#8217;s on your mind?' ); ?></label>
 			<textarea name="content" id="content" class="mceEditor" rows="3" cols="15"></textarea>
 		</div>
 
@@ -524,7 +556,17 @@ function wp_dashboard_site_activity() {
  *
  * @since 3.8.0
  *
- * @param array $args
+ * @param array $args {
+ *     An array of query and display arguments.
+ *
+ *     @type int    $display Number of posts to display.
+ *     @type int    $max     Maximum number of posts to query.
+ *     @type string $status  Post status.
+ *     @type string $order   Designates ascending ('ASC') or descending ('DESC') order.
+ *     @type string $title   Section title.
+ *     @type string $id      The container id.
+ * }
+ * @return bool False if no posts were found. True otherwise.
  */
 function wp_dashboard_recent_posts( $args ) {
 	$query_args = array(
@@ -563,17 +605,21 @@ function wp_dashboard_recent_posts( $args ) {
 			} elseif ( date( 'Y-m-d', $time ) == $tomorrow ) {
 				$relative = __( 'Tomorrow' );
 			} else {
-				$relative = date( 'M jS', $time );
+				/* translators: date and time format for recent posts on the dashboard, see http://php.net/date */
+				$relative = date_i18n( __( 'M jS' ), $time );
 			}
 
-			printf(
-				'<li%s><span>%s, %s</span> <a href="%s">%s</a></li>',
-				( $i >= intval ( $args['display'] ) ? ' class="hidden"' : '' ),
-				$relative,
-				get_the_time(),
-				get_edit_post_link(),
-				_draft_or_post_title()
-			);
+ 			$text = sprintf(
+				/* translators: 1: relative date, 2: time, 4: post title */
+ 				__( '<span>%1$s, %2$s</span> <a href="%3$s">%4$s</a>' ),
+  				$relative,
+  				get_the_time(),
+  				get_edit_post_link(),
+  				_draft_or_post_title()
+  			);
+
+ 			$hidden = $i >= $args['display'] ? ' class="hidden"' : '';
+ 			echo "<li{$hidden}>$text</li>";
 			$i++;
 		}
 
@@ -594,7 +640,8 @@ function wp_dashboard_recent_posts( $args ) {
  *
  * @since 3.8.0
  *
- * @param int $total_items
+ * @param int $total_items Optional. Number of comments to query. Default 5.
+ * @return bool False if no comments were found. True otherwise.
  */
 function wp_dashboard_recent_comments( $total_items = 5 ) {
 	global $wpdb;
@@ -820,6 +867,9 @@ function wp_dashboard_primary() {
  * Display the WordPress news feeds.
  *
  * @since 3.8.0
+ *
+ * @param string $widget_id Widget ID.
+ * @param array  $feeds     Array of RSS feeds.
  */
 function wp_dashboard_primary_output( $widget_id, $feeds ) {
 	foreach( $feeds as $type => $args ) {
@@ -941,21 +991,29 @@ function wp_dashboard_quota() {
 	<div class="mu-storage">
 	<ul>
 		<li class="storage-count">
-			<?php printf(
-				'<a href="%1$s" title="%3$s">%2$sMB %4$s</a>',
+			<?php $text = sprintf(
+				/* translators: number of megabytes */
+				__( '%s MB Space Allowed' ),
+				number_format_i18n( $quota )
+			);
+			printf(
+				'<a href="%1$s" title="%2$s">%3$s</a>',
 				esc_url( admin_url( 'upload.php' ) ),
-				number_format_i18n( $quota ),
 				__( 'Manage Uploads' ),
-				__( 'Space Allowed' )
+				$text
 			); ?>
 		</li><li class="storage-count <?php echo $used_class; ?>">
-			<?php printf(
-				'<a href="%1$s" title="%4$s" class="musublink">%2$sMB (%3$s%%) %5$s</a>',
-				esc_url( admin_url( 'upload.php' ) ),
+			<?php $text = sprintf(
+				/* translators: 1: number of megabytes, 2: percentage */
+				__( '%1$s MB (%2$s%%) Space Used' ),
 				number_format_i18n( $used, 2 ),
-				$percentused,
+				$percentused
+			);
+			printf(
+				'<a href="%1$s" title="%2$s" class="musublink">%3$s</a>',
+				esc_url( admin_url( 'upload.php' ) ),
 				__( 'Manage Uploads' ),
-				__( 'Space Used' )
+				$text
 			); ?>
 		</li>
 	</ul>

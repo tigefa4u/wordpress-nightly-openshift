@@ -20,9 +20,13 @@ if ( typeof(jQuery) != 'undefined' ) {
 			adminbar.find('li.menupop').on('click.wp-mobile-hover', function(e) {
 				var el = $(this);
 
-				if ( !el.hasClass('hover') ) {
+				if ( el.parent().is('#wp-admin-bar-root-default') && !el.hasClass('hover') ) {
 					e.preventDefault();
 					adminbar.find('li.menupop.hover').removeClass('hover');
+					el.addClass('hover');
+				} else if ( !el.hasClass('hover') ) {
+					e.stopPropagation();
+					e.preventDefault();
 					el.addClass('hover');
 				}
 
@@ -149,6 +153,12 @@ if ( typeof(jQuery) != 'undefined' ) {
 					}
 				} catch(e) {}
 			});
+		}
+
+		if ( navigator.userAgent && document.body.className.indexOf( 'no-font-face' ) === -1 &&
+			/Android (1.0|1.1|1.5|1.6|2.0|2.1)|Nokia|Opera Mini|w(eb)?OSBrowser|webOS|UCWEB|Windows Phone OS 7|XBLWP7|ZuneWP7|MSIE 7/.test( navigator.userAgent ) ) {
+
+			document.body.className += ' no-font-face';
 		}
 	});
 } else {
@@ -343,6 +353,12 @@ if ( typeof(jQuery) != 'undefined' ) {
 
 			if ( w.location.hash )
 				w.scrollBy(0,-32);
+
+			if ( navigator.userAgent && document.body.className.indexOf( 'no-font-face' ) === -1 &&
+				/Android (1.0|1.1|1.5|1.6|2.0|2.1)|Nokia|Opera Mini|w(eb)?OSBrowser|webOS|UCWEB|Windows Phone OS 7|XBLWP7|ZuneWP7|MSIE 7/.test( navigator.userAgent ) ) {
+
+				document.body.className += ' no-font-face';
+			}
 		});
 	})(document, window);
 

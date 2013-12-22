@@ -17,7 +17,7 @@ TABLE OF CONTENTS:
 ------------------------------------------------------------------------------*/
 
 html {
-	background: #eee;
+	background: #f1f1f1;
 }
 
 /* Checkbooms */
@@ -114,7 +114,7 @@ input[type=radio]:checked:before {
 
 ul#adminmenu a.wp-has-current-submenu:after,
 ul#adminmenu > li.current > a.current:after {
-	border-left-color: #eee;
+	border-left-color: #f1f1f1;
 }
 
 .row-actions {
@@ -383,13 +383,11 @@ h3 {
 }
 
 .wrap .add-new-h2,
-.wrap .add-new-h2:active,
-#add-new-comment a {
+.wrap .add-new-h2:active {
 	background: #e0e0e0;
 }
 
-.wrap .add-new-h2:hover,
-#add-new-comment a:hover {
+.wrap .add-new-h2:hover {
 	background: #2ea2cc;
 	color: #fff;
 }
@@ -439,8 +437,7 @@ h3 {
 	border-color: #c00 !important;
 }
 
-.submit,
-#commentsdiv #add-new-comment {
+.submit {
 	border: none;
 }
 
@@ -958,9 +955,9 @@ p.popular-tags,
 .popular-tags,
 .feature-filter,
 .imgedit-group {
-	border: 1px solid #ddd;
-	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-	box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+	border: 1px solid #e5e5e5;
+	-webkit-box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+	box-shadow: 0 1px 1px rgba(0,0,0,0.04);
 }
 
 #post-status-info {
@@ -1395,8 +1392,8 @@ table.diff .diff-addedline ins {
 }
 
 #sidemenu a.current {
-	background-color: #eee;
-	border-color: #dfdfdf #dfdfdf #eee;
+	background-color: #f1f1f1;
+	border-color: #dfdfdf #dfdfdf #f1f1f1;
 	color: #000;
 }
 
@@ -1760,7 +1757,7 @@ div.widgets-sortables,
 	color: #000;
 	background: none;
 	border-color: #ccc;
-	border-bottom-color: #eee;
+	border-bottom-color: #f1f1f1;
 }
 
 h2.nav-tab-wrapper, h3.nav-tab-wrapper {
@@ -1789,20 +1786,13 @@ h2.nav-tab-wrapper, h3.nav-tab-wrapper {
 
 .about-wrap h2 .nav-tab-active {
 	border-color: #ccc;
-	border-bottom-color: #eee;
+	border-bottom-color: #f1f1f1;
 }
 
-.about-wrap h3 {
-	color: #333;
-}
-
-.about-wrap .feature-section h4 {
-	color: #464646;
-}
-
-.about-wrap .feature-section img {
-	background: #fff;
-	border-color: #ccc;
+.about-wrap h2,
+.about-wrap h3,
+.about-wrap h4 {
+	color: #222;
 }
 
 .about-wrap .feature-section .col-2:before,
@@ -1971,7 +1961,7 @@ a .mceIcon:hover {
 }
 
 body.login {
-	background: #eee;
+	background: #f1f1f1;
 }
 
 .login #nav a,

@@ -1,5 +1,9 @@
-Wordpress on OpenShift
-======================
+Wordpress Nightly Builds on OpenShift
+=====================================
+
+[![nightly builds dashboard](http://i.imgur.com/vNckYmZ.png)
+
+[![choose scheme dashboard themes](http://i.imgur.com/1m2cIun.png)
 
 This git repository helps you get up and running quickly w/ a Wordpress installation
 on OpenShift.  The backend database is MySQL and the database name is the 
@@ -9,18 +13,22 @@ match the application so you might have to update .openshift/action_hooks/build.
 
 
 Running on OpenShift
-----------------------------
+--------------------
 
 Create an account at http://openshift.redhat.com/ and install the client tools (run 'rhc setup' first)
 
 Create a php-5.3 application (you can call your application whatever you want)
 
-    rhc app create wordpress php-5 mysql-5 --from-code=git://github.com/tigefa4u/wordpress-nightly-openshift.git
+```bash
+$ rhc app create wordpress php-5 mysql-5 --from-code=https://github.com/tigefa4u/wordpress-nightly-openshift.git
+```
 
 That's it, you can now checkout your application at:
 
-    http://wordpress-$yournamespace.rhcloud.com
-    
+```bash
+http://wordpress-$yournamespace.rhcloud.com
+```
+ 
 You'll be prompted to set an admin password and name your WordPress site the first time you visit this 
 page.  
 

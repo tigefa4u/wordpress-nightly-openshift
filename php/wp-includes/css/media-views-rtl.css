@@ -84,6 +84,17 @@
 .ui-sortable,
 .ui-draggable {
 	-ms-touch-action: none;
+	touch-action:     none;
+}
+
+.meta-box-sortables.ui-sortable {
+	-ms-touch-action: auto;
+	touch-action:     auto;
+}
+
+.meta-box-sortables.ui-sortable .hndle {
+	-ms-touch-action: none;
+	touch-action:     none;
 }
 
 /**
@@ -689,15 +700,17 @@
 	overflow: hidden;
 }
 
+/* @noflip */
 .attachment .thumbnail img {
 	top: 0;
-	right: 0;
+	left: 0;
 }
 
+/* @noflip */
 .attachment .thumbnail .centered {
 	position: absolute;
 	top: 0;
-	right: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	-webkit-transform: translate( 50%, 50% );
@@ -1510,6 +1523,40 @@
 .ie7 .media-sidebar .setting .link-to-custom {
 	float: right;
 }
+
+/**
+ * Localization
+ */
+.rtl .media-modal,
+.rtl .media-frame,
+.rtl .media-frame .search,
+.rtl .media-frame input[type="text"],
+.rtl .media-frame input[type="password"],
+.rtl .media-frame input[type="number"],
+.rtl .media-frame input[type="search"],
+.rtl .media-frame input[type="email"],
+.rtl .media-frame input[type="url"],
+.rtl .media-frame textarea,
+.rtl .media-frame select {
+	font-family: Tahoma, sans-serif;
+}
+
+:lang(he-il) .rtl .media-modal,
+:lang(he-il) .rtl .media-frame,
+:lang(he-il) .rtl .media-frame .search,
+:lang(he-il) .rtl .media-frame input[type="text"],
+:lang(he-il) .rtl .media-frame input[type="password"],
+:lang(he-il) .rtl .media-frame input[type="number"],
+:lang(he-il) .rtl .media-frame input[type="search"],
+:lang(he-il) .rtl .media-frame input[type="email"],
+:lang(he-il) .rtl .media-frame input[type="url"],
+:lang(he-il) .rtl .media-frame textarea,
+:lang(he-il) .rtl .media-frame select {
+	font-family: Arial, sans-serif;
+}
+
+
+
 
 @media only screen and (max-width: 960px) {
 	.media-frame-content .media-toolbar-primary .search,

@@ -1902,7 +1902,7 @@ class WP_Automatic_Updater {
 
 		// if the filesystem is unavailable, false is returned.
 		if ( false === $upgrade_result ) {
-			$upgrade_result = new WP_Error( 'fs_unavailable', __( 'Could not access filesystem.' ) );			
+			$upgrade_result = new WP_Error( 'fs_unavailable', __( 'Could not access filesystem.' ) );
 		}
 
 		// Core doesn't output this, so lets append it so we don't get confused
@@ -2036,7 +2036,7 @@ class WP_Automatic_Updater {
 		 	 *
 		 	 * @since 3.8.0
 		 	 *
-		 	 * @param array $update_results The results of all updates attempted
+		 	 * @param array $update_results The results of all attempted updates.
 		 	 */
 			do_action( 'automatic_updates_complete', $this->update_results );
 		}
@@ -2376,6 +2376,7 @@ class WP_Automatic_Updater {
 			$body[] = '';
 		}
 
+		$site_title = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 		if ( $failures ) {
 			$body[] = __( "
 BETA TESTING?
@@ -2389,9 +2390,9 @@ If you think these failures might be due to a bug in WordPress, could you report
 
 Thanks! -- The WordPress Team" );
 
-			$subject = sprintf( __( '[%s] There were failures during background updates' ), get_bloginfo( 'name' ) );
+			$subject = sprintf( __( '[%s] There were failures during background updates' ), $site_title );
 		} else {
-			$subject = sprintf( __( '[%s] Background updates have finished' ), get_bloginfo( 'name' ) );
+			$subject = sprintf( __( '[%s] Background updates have finished' ), $site_title );
 		}
 
 		$body[] = __( 'UPDATE LOG' );
@@ -2446,13 +2447,14 @@ Thanks! -- The WordPress Team" );
 		 * @param array $email {
 		 *     Array of email arguments that will be passed to wp_mail().
 		 *
-		 *     @type string $to      The email recipient. An array of emails can be returned, as handled by wp_mail().
-		 *     @type string $subject The email's subject.
-		 *     @type string $body    The email message body.
-		 *     @type string $headers Any email headers, defaults to no headers.
+		 *     @type string $to      The email recipient. An array of emails can be returned,
+		 *                           as handled by wp_mail().
+		 *     @type string $subject Email subject.
+		 *     @type string $body    Email message body.
+		 *     @type string $headers Any email headers. Default empty.
 		 * }
-		 * @param int   $failures The number of failures encountered while upgrading
-		 * @param mixed $results  The results of all updates attempted
+		 * @param int   $failures The number of failures encountered while upgrading.
+		 * @param mixed $results  The results of all attempted updates.
 		 */
 		$email = apply_filters( 'automatic_updates_debug_email', $email, $failures, $this->update_results );
 

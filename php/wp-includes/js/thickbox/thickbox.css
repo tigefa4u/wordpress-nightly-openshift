@@ -12,6 +12,16 @@
 	color:#666666;
 }
 
+.rtl #TB_window,
+.rtl #TB_secondLine {
+	font-family: Tahoma, sans-serif;
+}
+
+:lang(he-il) .rtl #TB_window,
+:lang(he-il) .rtl #TB_secondLine {
+	font-family: Arial, sans-serif;
+}
+
 #TB_window a:link {color: #666666;}
 #TB_window a:visited {color: #666666;}
 #TB_window a:hover {color: #000;}
@@ -23,7 +33,7 @@
 /* ----------------------------------------------------------------------------------------------------------------*/
 #TB_overlay {
 	position: fixed;
-	z-index:100;
+	z-index:510; /* should overlap theme modal, which is 500 on mobile. */
 	top: 0px;
 	left: 0px;
 	height:100%;
@@ -47,7 +57,7 @@
 #TB_window {
 	position: fixed;
 	background: #ffffff;
-	z-index: 102;
+	z-index: 510; /* should overlap theme modal, which is 500 on mobile. */
 	color:#000000;
 	visibility: hidden;
 	text-align:left;

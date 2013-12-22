@@ -56,7 +56,7 @@ if ( current_user_can( 'install_themes' ) ) {
 	if ( is_multisite() ) {
 		$help_install = '<p>' . __('Installing themes on Multisite can only be done from the Network Admin section.') . '</p>';
 	} else {
-		$help_install = '<p>' . sprintf( __('If you would like to see more themes to choose from, click on the &#8220;Install Themes&#8221; tab and you will be able to browse or search for additional themes from the <a href="%s" target="_blank">WordPress.org Theme Directory</a>. Themes in the WordPress.org Theme Directory are designed and developed by third parties, and are compatible with the license WordPress uses. Oh, and they&#8217;re free!'), 'http://wordpress.org/themes/' ) . '</p>';
+		$help_install = '<p>' . sprintf( __('If you would like to see more themes to choose from, click on the &#8220;Add New&#8221; button and you will be able to browse or search for additional themes from the <a href="%s" target="_blank">WordPress.org Theme Directory</a>. Themes in the WordPress.org Theme Directory are designed and developed by third parties, and are compatible with the license WordPress uses. Oh, and they&#8217;re free!'), 'http://wordpress.org/themes/' ) . '</p>';
 	}
 
 	get_current_screen()->add_help_tab( array(
@@ -91,6 +91,7 @@ if ( current_user_can( 'switch_themes' ) ) {
 } else {
 	$themes = wp_prepare_themes_for_js( array( wp_get_theme() ) );
 }
+wp_reset_vars( array( 'theme', 'search' ) );
 
 wp_localize_script( 'theme', '_wpThemeSettings', array(
 	'themes'   => $themes,
@@ -98,12 +99,15 @@ wp_localize_script( 'theme', '_wpThemeSettings', array(
 		'canInstall'    => ( ! is_multisite() && current_user_can( 'install_themes' ) ),
 		'installURI'    => ( ! is_multisite() && current_user_can( 'install_themes' ) ) ? admin_url( 'theme-install.php' ) : null,
 		'confirmDelete' => __( "Are you sure you want to delete this theme?\n\nClick 'Cancel' to go back, 'OK' to confirm the delete." ),
-		'root'          => admin_url( 'themes.php' ),
-		'extraRoutes'   => '',
+		'root'          => parse_url( admin_url( 'themes.php' ), PHP_URL_PATH ),
+		'theme'         => esc_html( $theme ),
+		'search'        => esc_html( $search ),
+
 	),
  	'l10n' => array(
  		'addNew' => __( 'Add New Theme' ),
- 		'search'  => __( 'Search...' ),
+ 		'search'  => __( 'Search Installed Themes' ),
+ 		'searchPlaceholder' => __( 'Search installed themes...' ),
   	),
 ) );
 
@@ -116,7 +120,7 @@ require_once( ABSPATH . 'wp-admin/admin-header.php' );
 
 <div class="wrap">
 	<h2><?php esc_html_e( 'Themes' ); ?>
-		<span class="theme-count"></span>
+		<span class="theme-count"><?php echo count( $themes ); ?></span>
 	<?php if ( ! is_multisite() && current_user_can( 'install_themes' ) ) : ?>
 		<a href="<?php echo admin_url( 'theme-install.php' ); ?>" class="add-new-h2"><?php echo esc_html( _x( 'Add New', 'Add new theme' ) ); ?></a>
 	<?php endif; ?>
@@ -179,7 +183,55 @@ if ( ! $ct->errors() || ( 1 == count( $ct->errors()->get_error_codes() )
 
 ?>
 
-<div class="theme-browser"></div>
+<div class="theme-browser">
+	<div class="themes">
+
+<?php
+/*
+ * This PHP is synchronized with the tmpl-theme template below!
+ */
+
+foreach ( $themes as $theme ) : ?>
+<div class="theme<?php if ( $theme['active'] ) echo ' active'; ?>">
+	<?php if ( ! empty( $theme['screenshot'][0] ) ) { ?>
+		<div class="theme-screenshot">
+			<img src="<?php echo $theme['screenshot'][0]; ?>" alt="" />
+		</div>
+	<?php } else { ?>
+		<div class="theme-screenshot blank"></div>
+	<?php } ?>
+	<span class="more-details"><?php _e( 'Theme Details' ); ?></span>
+	<div class="theme-author"><?php printf( __( 'By %s' ), $theme['author'] ); ?></div>
+
+	<?php if ( $theme['active'] ) { ?>
+		<h3 class="theme-name"><span><?php _ex( 'Active:', 'theme' ); ?></span> <?php echo $theme['name']; ?></h3>
+	<?php } else { ?>
+		<h3 class="theme-name"><?php echo $theme['name']; ?></h3>
+	<?php } ?>
+
+	<div class="theme-actions">
+
+	<?php if ( $theme['active'] ) { ?>
+		<?php if ( $theme['actions']['customize'] ) { ?>
+			<a class="button button-primary customize load-customize hide-if-no-customize" href="<?php echo $theme['actions']['customize']; ?>"><?php _e( 'Customize' ); ?></a>
+		<?php } ?>
+	<?php } else { ?>
+		<a class="button button-primary activate" href="<?php echo $theme['actions']['activate']; ?>"><?php _e( 'Activate' ); ?></a>
+		<a class="button button-secondary load-customize hide-if-no-customize" href="<?php echo $theme['actions']['customize']; ?>"><?php _e( 'Live Preview' ); ?></a>
+		<a class="button button-secondary hide-if-customize" href="<?php echo $theme['actions']['preview']; ?>"><?php _e( 'Preview' ); ?></a>
+	<?php } ?>
+
+	</div>
+
+	<?php if ( $theme['hasUpdate'] ) { ?>
+		<div class="theme-update"><?php _e( 'Update Available' ); ?></div>
+	<?php } ?>
+</div>
+<?php endforeach; ?>
+	<br class="clear" />
+	</div>
+</div>
+<div class="theme-overlay"></div>
 
 <?php
 // List broken themes, if any.
@@ -212,6 +264,11 @@ if ( ! is_multisite() && current_user_can('edit_themes') && $broken_themes = wp_
 ?>
 </div><!-- .wrap -->
 
+<?php
+/*
+ * The tmpl-theme template is synchronized with PHP above!
+ */
+?>
 <script id="tmpl-theme" type="text/template">
 	<# if ( data.screenshot[0] ) { #>
 		<div class="theme-screenshot">
@@ -220,8 +277,9 @@ if ( ! is_multisite() && current_user_can('edit_themes') && $broken_themes = wp_
 	<# } else { #>
 		<div class="theme-screenshot blank"></div>
 	<# } #>
+	<span class="more-details"><?php _e( 'Theme Details' ); ?></span>
 	<div class="theme-author"><?php printf( __( 'By %s' ), '{{{ data.author }}}' ); ?></div>
-	
+
 	<# if ( data.active ) { #>
 		<h3 class="theme-name"><span><?php _ex( 'Active:', 'theme' ); ?></span> {{{ data.name }}}</h3>
 	<# } else { #>
@@ -232,11 +290,12 @@ if ( ! is_multisite() && current_user_can('edit_themes') && $broken_themes = wp_
 
 	<# if ( data.active ) { #>
 		<# if ( data.actions.customize ) { #>
-			<a class="button button-primary hide-if-no-customize" href="{{ data.actions.customize }}"><?php _e( 'Customize' ); ?></a>
+			<a class="button button-primary customize load-customize hide-if-no-customize" href="{{ data.actions.customize }}"><?php _e( 'Customize' ); ?></a>
 		<# } #>
 	<# } else { #>
 		<a class="button button-primary activate" href="{{{ data.actions.activate }}}"><?php _e( 'Activate' ); ?></a>
-		<a class="button button-secondary preview" href="{{{ data.actions.customize }}}"><?php _e( 'Live Preview' ); ?></a>
+		<a class="button button-secondary load-customize hide-if-no-customize" href="{{{ data.actions.customize }}}"><?php _e( 'Live Preview' ); ?></a>
+		<a class="button button-secondary hide-if-customize" href="{{{ data.actions.preview }}}"><?php _e( 'Preview' ); ?></a>
 	<# } #>
 
 	</div>
@@ -257,14 +316,9 @@ if ( ! is_multisite() && current_user_can('edit_themes') && $broken_themes = wp_
 		<div class="theme-about">
 			<div class="theme-screenshots">
 			<# if ( data.screenshot[0] ) { #>
-				<div class="screenshot first"><img src="{{ data.screenshot[0] }}" alt="" /></div>
-				<# if ( _.size( data.screenshot ) > 1 ) {
-						_.each ( data.screenshot, function( image ) {
-							#><div class="screenshot thumb"><img src="{{ image }}" alt="" /></div><#
-						});
-				} #>
+				<div class="screenshot"><img src="{{ data.screenshot[0] }}" alt="" /></div>
 			<# } else { #>
-				<div class="screenshot first blank"></div>
+				<div class="screenshot blank"></div>
 			<# } #>
 			</div>
 
@@ -288,28 +342,26 @@ if ( ! is_multisite() && current_user_can('edit_themes') && $broken_themes = wp_
 				<# } #>
 
 				<# if ( data.tags ) { #>
-					<p class="theme-tags">
-						<span><?php _e( 'Tags:' ); ?></span>
-						{{{ data.tags.replace( /-/g, ' ' ) }}}
-					</p>
+					<p class="theme-tags"><span><?php _e( 'Tags:' ); ?></span> {{{ data.tags }}}</p>
 				<# } #>
 			</div>
 		</div>
 
 		<div class="theme-actions">
 			<div class="active-theme">
-				<a href="{{{ data.actions.customize }}}" class="button button-primary hide-if-no-customize"><?php _e( 'Customize' ); ?></a>
+				<a href="{{{ data.actions.customize }}}" class="button button-primary customize load-customize hide-if-no-customize"><?php _e( 'Customize' ); ?></a>
 				<?php echo implode( ' ', $current_theme_actions ); ?>
 			</div>
 			<div class="inactive-theme">
 				<# if ( data.actions.activate ) { #>
-					<a href="{{{ data.actions.activate }}}" class="button button-primary"><?php _e( 'Activate' ); ?></a>
+					<a href="{{{ data.actions.activate }}}" class="button button-primary activate"><?php _e( 'Activate' ); ?></a>
 				<# } #>
-				<a href="{{{ data.actions.customize }}}" class="button button-secondary"><?php _e( 'Live Preview' ); ?></a>
+				<a href="{{{ data.actions.customize }}}" class="button button-secondary load-customize hide-if-no-customize"><?php _e( 'Live Preview' ); ?></a>
+				<a href="{{{ data.actions.preview }}}" class="button button-secondary hide-if-customize"><?php _e( 'Preview' ); ?></a>
 			</div>
 
-			<# if ( ! data.active && data.actions.delete ) { #>
-				<a href="{{{ data.actions.delete }}}" class="button button-secondary delete-theme"><?php _e( 'Delete' ); ?></a>
+			<# if ( ! data.active && data.actions['delete'] ) { #>
+				<a href="{{{ data.actions['delete'] }}}" class="button button-secondary delete-theme"><?php _e( 'Delete' ); ?></a>
 			<# } #>
 		</div>
 	</div>

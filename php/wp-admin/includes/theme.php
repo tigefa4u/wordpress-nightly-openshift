@@ -113,14 +113,14 @@ function theme_update_available( $theme ) {
 }
 
 /**
- * Retrieve the update link if there is an update for a theme available.
+ * Retrieve the update link if there is a theme update available.
  *
- * Will return a link, if there is an update available.
+ * Will return a link if there is an update available.
  *
  * @since 3.8.0
  *
- * @param object $theme Theme data object.
- * @return string|bool HTML for the update link, or False if no valid info was passed.
+ * @param WP_Theme $theme WP_Theme object.
+ * @return string|bool HTML for the update link, or false if invalid info was passed.
  */
 function get_theme_update_available( $theme ) {
 	static $themes_update;
@@ -197,9 +197,10 @@ function get_theme_feature_list( $api = true ) {
 			'right-sidebar' => __( 'Right Sidebar' ),
 		),
 
-		__( 'Width' ) => array(
-			'fixed-width'    => __( 'Fixed Width' ),
-			'flexible-width' => __( 'Flexible Width' ),
+		__( 'Layout' ) => array(
+			'fixed-layout'      => __( 'Fixed Layout' ),
+			'fluid-layout'      => __( 'Fluid Layout' ),
+			'responsive-layout' => __( 'Responsive Layout' ),
 		),
 
 		__( 'Features' ) => array(
@@ -310,7 +311,7 @@ function themes_api( $action, $args = null ) {
 	 *                       'feature_list', or 'query_themes'.
  	*/
 	$args = apply_filters( 'themes_api_args', $args, $action );
-	
+
 	/**
 	 * Filter whether to override the WordPress.org Themes API.
 	 *
@@ -377,8 +378,10 @@ function themes_api( $action, $args = null ) {
  * @return array An associative array of theme data, sorted by name.
  */
 function wp_prepare_themes_for_js( $themes = null ) {
-	$prepared_themes = array();
 	$current_theme = get_stylesheet();
+
+	// Make sure the current theme is listed first.
+	$prepared_themes = array( $current_theme => array() );
 
 	if ( null === $themes ) {
 		$themes = wp_get_themes( array( 'allowed' => true ) );
@@ -405,7 +408,7 @@ function wp_prepare_themes_for_js( $themes = null ) {
 		$slug = $theme->get_stylesheet();
 		$encoded_slug = urlencode( $slug );
 
-		$prepared_themes[] = array(
+		$prepared_themes[ $slug ] = array(
 			'id'           => $slug,
 			'name'         => $theme->display( 'Name' ),
 			'screenshot'   => array( $theme->get_screenshot() ), // @todo multiple
@@ -421,6 +424,13 @@ function wp_prepare_themes_for_js( $themes = null ) {
 			'actions'      => array(
 				'activate' => current_user_can( 'switch_themes' ) ? wp_nonce_url( admin_url( 'themes.php?action=activate&amp;stylesheet=' . $encoded_slug ), 'switch-theme_' . $slug ) : null,
 				'customize'=> current_user_can( 'edit_theme_options' ) ? wp_customize_url( $slug ) : null,
+				'preview'   => add_query_arg( array(
+					'preview'        => 1,
+					'template'       => urlencode( $theme->get_template() ),
+					'stylesheet'     => urlencode( $slug ),
+					'preview_iframe' => true,
+					'TB_iframe'      => true,
+				), home_url( '/' ) ),
 				'delete'   => current_user_can( 'delete_themes' ) ? wp_nonce_url( admin_url( 'themes.php?action=delete&amp;stylesheet=' . $encoded_slug ), 'delete-theme_' . $slug ) : null,
 			),
 		);
@@ -435,5 +445,6 @@ function wp_prepare_themes_for_js( $themes = null ) {
 	 *
 	 * @param array $prepared_themes Array of themes.
 	 */
-	return apply_filters( 'wp_prepare_themes_for_js', $prepared_themes );
+	$prepared_themes = apply_filters( 'wp_prepare_themes_for_js', $prepared_themes );
+	return array_values( $prepared_themes );
 }

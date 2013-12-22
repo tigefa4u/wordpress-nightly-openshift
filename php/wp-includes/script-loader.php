@@ -331,8 +331,6 @@ function wp_default_scripts( &$scripts ) {
 
 	$scripts->add( 'user-suggest', "/wp-admin/js/user-suggest$suffix.js", array( 'jquery-ui-autocomplete' ), false, 1 );
 
-	$scripts->add( 'about', "/wp-admin/js/about$suffix.js", array( 'jquery', 'password-strength-meter' ), false, 1 );
-
 	$scripts->add( 'admin-bar', "/wp-includes/js/admin-bar$suffix.js", array(), false, 1 );
 
 	$scripts->add( 'wplink', "/wp-includes/js/wplink$suffix.js", array( 'jquery', 'wpdialogs' ), false, 1 );
@@ -551,7 +549,7 @@ function wp_default_styles( &$styles ) {
 
 	$suffix = SCRIPT_DEBUG ? '' : '.min';
 
-	$rtl_styles = array( 'wp-admin', 'ie', 'media', 'admin-bar', 'customize-controls', 'media-views', 'wp-color-picker', 'wp-pointer', 'editor-buttons', 'farbtastic', 'wp-auth-check', 'wp-jquery-ui-dialog', 'media-views', 'buttons', 'install', 'colors' );
+	$rtl_styles = array( 'wp-admin', 'ie', 'media', 'admin-bar', 'customize-controls', 'media-views', 'wp-color-picker', 'wp-pointer', 'editor-buttons', 'farbtastic', 'wp-auth-check', 'wp-jquery-ui-dialog', 'media-views', 'buttons', 'install', 'colors-fresh' );
 
 	$styles->add( 'wp-admin', "/wp-admin/css/wp-admin$suffix.css", array( 'open-sans', 'dashicons' ) );
 
@@ -698,9 +696,6 @@ function wp_style_loader_src( $src, $handle ) {
 		$color = $_wp_admin_css_colors[$color];
 		$parsed = parse_url( $src );
 		$url = $color->url;
-
-		if ( defined('SCRIPT_DEBUG') && SCRIPT_DEBUG )
-			$url = preg_replace( '/.min.css$|.min.css(?=\?)/', '.css', $url );
 
 		if ( isset($parsed['query']) && $parsed['query'] ) {
 			wp_parse_str( $parsed['query'], $qv );
