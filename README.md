@@ -1,9 +1,9 @@
 Wordpress Nightly Builds on OpenShift
 =====================================
 
-[![nightly builds dashboard](http://i.imgur.com/vNckYmZ.png)
+![nightly builds dashboard](http://i.imgur.com/vNckYmZ.png)
 
-[![choose scheme dashboard themes](http://i.imgur.com/1m2cIun.png)
+![choose scheme dashboard themes](http://i.imgur.com/1m2cIun.png)
 
 This git repository helps you get up and running quickly w/ a Wordpress installation
 on OpenShift.  The backend database is MySQL and the database name is the 
