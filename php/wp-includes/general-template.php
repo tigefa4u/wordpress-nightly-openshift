@@ -1702,7 +1702,7 @@ function feed_links_extra( $args = array() ) {
 		$post = get_post( $id );
 
 		if ( comments_open() || pings_open() || $post->comment_count > 0 ) {
-			$title = sprintf( $args['singletitle'], get_bloginfo('name'), $args['separator'], esc_html( get_the_title() ) );
+			$title = sprintf( $args['singletitle'], get_bloginfo('name'), $args['separator'], the_title_attribute( array( 'echo' => false ) ) );
 			$href = get_post_comments_feed_link( $post->ID );
 		}
 	} elseif ( is_post_type_archive() ) {
@@ -1794,22 +1794,6 @@ function noindex() {
  */
 function wp_no_robots() {
 	echo "<meta name='robots' content='noindex,follow' />\n";
-}
-
-/**
- * Determine if TinyMCE is available.
- *
- * Checks to see if the user has deleted the tinymce files to slim down there WordPress install.
- *
- * @since 2.1.0
- *
- * @return bool Whether TinyMCE exists.
- */
-function rich_edit_exists() {
-	global $wp_rich_edit_exists;
-	if ( !isset($wp_rich_edit_exists) )
-		$wp_rich_edit_exists = file_exists(ABSPATH . WPINC . '/js/tinymce/tiny_mce.js');
-	return $wp_rich_edit_exists;
 }
 
 /**

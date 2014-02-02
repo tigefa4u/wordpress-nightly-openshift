@@ -969,7 +969,7 @@ function uninstall_plugin($plugin) {
  * @param string $icon_url The url to the icon to be used for this menu.
  *     * Pass a base64-encoded SVG using a data URI, which will be colored to match the color scheme.
  *       This should begin with 'data:image/svg+xml;base64,'.
- *     * Pass the name of a Dashicons helper class to use a font icon, e.g. 'dashicons-piechart'.
+ *     * Pass the name of a Dashicons helper class to use a font icon, e.g. 'dashicons-chart-pie'.
  *     * Pass 'none' to leave div.wp-menu-image empty so an icon can be added via CSS.
  * @param int $position The position in the menu order this one should appear
  *
@@ -1412,7 +1412,7 @@ function remove_submenu_page( $menu_slug, $submenu_slug ) {
  *
  * If the slug hasn't been registered properly no url will be returned
  *
- * @since 3.0
+ * @since 3.0.0
  *
  * @param string $menu_slug The slug name to refer to this menu by (should be unique for this menu)
  * @param bool $echo Whether or not to echo the url - default is true
@@ -1460,15 +1460,6 @@ function get_admin_page_parent( $parent = '' ) {
 			$parent = $_wp_real_parent_file[$parent];
 		return $parent;
 	}
-
-	/*
-	if ( !empty ( $parent_file ) ) {
-		if ( isset( $_wp_real_parent_file[$parent_file] ) )
-			$parent_file = $_wp_real_parent_file[$parent_file];
-
-		return $parent_file;
-	}
-	*/
 
 	if ( $pagenow == 'admin.php' && isset( $plugin_page ) ) {
 		foreach ( (array)$menu as $parent_menu ) {

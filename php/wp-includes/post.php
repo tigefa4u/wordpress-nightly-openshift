@@ -1131,7 +1131,7 @@ function get_post_types( $args = array(), $output = 'names', $operator = 'and' )
  * - menu_icon - The url to the icon to be used for this menu. Defaults to use the posts icon.
  *     * Pass a base64-encoded SVG using a data URI, which will be colored to match the color scheme.
  *      This should begin with 'data:image/svg+xml;base64,'.
- *     * Pass the name of a Dashicons helper class to use a font icon, e.g. 'dashicons-piechart'.
+ *     * Pass the name of a Dashicons helper class to use a font icon, e.g. 'dashicons-chart-pie'.
  *     * Pass 'none' to leave div.wp-menu-image empty so an icon can be added via CSS.
  * - capability_type - The string to use to build the read, edit, and delete capabilities. Defaults to 'post'.
  *     * May be passed as an array to allow for alternative plurals when using this argument as a base to construct the
@@ -1555,16 +1555,20 @@ add_action( 'admin_menu', '_add_post_type_submenus' );
 /**
  * Register support of certain features for a post type.
  *
- * All features are directly associated with a functional area of the edit screen, such as the
- * editor or a meta box: 'title', 'editor', 'comments', 'revisions', 'trackbacks', 'author',
- * 'excerpt', 'page-attributes', 'thumbnail', and 'custom-fields'.
+ * All core features are directly associated with a functional area of the edit
+ * screen, such as the editor or a meta box. Features include: 'title', 'editor',
+ * 'comments', 'revisions', 'trackbacks', 'author', 'excerpt', 'page-attributes',
+ * 'thumbnail', 'custom-fields', and 'post-formats'.
  *
- * Additionally, the 'revisions' feature dictates whether the post type will store revisions,
- * and the 'comments' feature dictates whether the comments count will show on the edit screen.
+ * Additionally, the 'revisions' feature dictates whether the post type will
+ * store revisions, and the 'comments' feature dictates whether the comments
+ * count will show on the edit screen.
  *
  * @since 3.0.0
- * @param string $post_type The post type for which to add the feature
- * @param string|array $feature the feature being added, can be an array of feature strings or a single string
+ *
+ * @param string       $post_type The post type for which to add the feature.
+ * @param string|array $feature   The feature being added, accpets an array of
+ *                                feature strings or a single string.
  */
 function add_post_type_support( $post_type, $feature ) {
 	global $_wp_post_type_features;

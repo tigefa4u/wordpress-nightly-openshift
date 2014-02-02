@@ -1742,7 +1742,7 @@ function make_clickable( $text ) {
 	}
 
 	// Cleanup of accidental links within links
-	$r = preg_replace( '#(<a( [^>]+?>|>))<a [^>]+?>([^>]+?)</a></a>#i', "$1$3</a>", $r );
+	$r = preg_replace( '#(<a([ \r\n\t]+[^>]+?>|>))<a [^>]+?>([^>]+?)</a></a>#i', "$1$3</a>", $r );
 	return $r;
 }
 
@@ -3568,6 +3568,10 @@ function normalize_whitespace( $str ) {
 
 /**
  * Properly strip all HTML tags including script and style
+ * 
+ * This differs from strip_tags() because it removes the contents of 
+ * the <script> and <style> tags. E.g. strip_tags( '<script>something</script>' )
+ * will return 'something'. wp_strip_all_tags will return ''
  *
  * @since 2.9.0
  *
@@ -3770,11 +3774,13 @@ function wp_unslash( $value ) {
  * @return string The found URL.
  */
 function get_url_in_content( $content ) {
-	if ( empty( $content ) )
-		return '';
+	if ( empty( $content ) ) {
+		return false;
+	}
 
-	if ( preg_match( '/<a\s[^>]*?href=([\'"])(.+?)\1/is', $content, $matches ) )
+	if ( preg_match( '/<a\s[^>]*?href=([\'"])(.+?)\1/is', $content, $matches ) ) {
 		return esc_url_raw( $matches[2] );
+	}
 
 	return false;
 }

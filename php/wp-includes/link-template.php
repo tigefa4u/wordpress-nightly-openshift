@@ -578,7 +578,7 @@ function get_category_feed_link($cat_id, $feed = '') {
  * Returns a link to the feed for all posts in a given term. A specific feed
  * can be requested or left blank to get the default feed.
  *
- * @since 3.0
+ * @since 3.0.0
  *
  * @param int $term_id ID of a category.
  * @param string $taxonomy Optional. Taxonomy of $term_id
@@ -994,14 +994,13 @@ function get_edit_comment_link( $comment_id = 0 ) {
 }
 
 /**
- * Display or retrieve edit comment link with formatting.
+ * Display edit comment link with formatting.
  *
  * @since 1.0.0
  *
  * @param string $link Optional. Anchor text.
  * @param string $before Optional. Display before edit link.
  * @param string $after Optional. Display after edit link.
- * @return string|null HTML content, if $echo is set to false.
  */
 function edit_comment_link( $link = null, $before = '', $after = '' ) {
 	global $comment;
@@ -1711,7 +1710,7 @@ function previous_posts_link( $label = null ) {
 /**
  * Return post pages link navigation for previous and next pages.
  *
- * @since 2.8
+ * @since 2.8.0
  *
  * @param string|array $args Optional args.
  * @return string The posts link navigation.

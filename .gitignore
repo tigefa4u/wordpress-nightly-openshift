@@ -1,6 +1,7 @@
 .project
 .DS_Store
 .svn
+.hg
 .bundle
 wordpress
 *.zip

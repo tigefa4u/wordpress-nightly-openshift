@@ -1401,7 +1401,9 @@ class Core_Upgrader extends WP_Upgrader {
 			}
 
 			if ( $try_rollback ) {
+				/** This filter is documented in wp-admin/includes/update-core.php */
 				apply_filters( 'update_feedback', $result );
+				/** This filter is documented in wp-admin/includes/update-core.php */
 				apply_filters( 'update_feedback', $this->strings['start_rollback'] );
 
 				$rollback_result = $this->upgrade( $current, array_merge( $parsed_args, array( 'do_rollback' => true ) ) );
@@ -2395,8 +2397,9 @@ Thanks! -- The WordPress Team" );
 			$subject = sprintf( __( '[%s] Background updates have finished' ), $site_title );
 		}
 
-		$body[] = __( 'UPDATE LOG' );
-		$body[] = '==========';
+		$title = __( 'UPDATE LOG' );
+		$body[] = $title;
+		$body[] = str_repeat( '=', strlen( $title ) );
 		$body[] = '';
 
 		foreach ( array( 'core', 'plugin', 'theme', 'translation' ) as $type ) {

@@ -133,7 +133,7 @@ function dismissed_updates() {
 /**
  * Display upgrade WordPress for downloading latest or upgrading automatically form.
  *
- * @since 2.7
+ * @since 2.7.0
  *
  * @return null
  */
@@ -220,7 +220,7 @@ function list_plugin_updates() {
 <form method="post" action="<?php echo esc_url( $form_action ); ?>" name="upgrade-plugins" class="upgrade">
 <?php wp_nonce_field('upgrade-core'); ?>
 <p><input id="upgrade-plugins" class="button" type="submit" value="<?php esc_attr_e('Update Plugins'); ?>" name="upgrade" /></p>
-<table class="widefat" cellspacing="0" id="update-plugins-table">
+<table class="widefat" id="update-plugins-table">
 	<thead>
 	<tr>
 		<th scope="col" class="manage-column check-column"><input type="checkbox" id="plugins-select-all" /></th>
@@ -298,7 +298,7 @@ function list_theme_updates() {
 <form method="post" action="<?php echo esc_url( $form_action ); ?>" name="upgrade-themes" class="upgrade">
 <?php wp_nonce_field('upgrade-core'); ?>
 <p><input id="upgrade-themes" class="button" type="submit" value="<?php esc_attr_e('Update Themes'); ?>" name="upgrade" /></p>
-<table class="widefat" cellspacing="0" id="update-themes-table">
+<table class="widefat" id="update-themes-table">
 	<thead>
 	<tr>
 		<th scope="col" class="manage-column check-column"><input type="checkbox" id="themes-select-all" /></th>
@@ -353,7 +353,7 @@ function list_translation_updates() {
 /**
  * Upgrade WordPress core display.
  *
- * @since 2.7
+ * @since 2.7.0
  *
  * @return null
  */
@@ -521,7 +521,12 @@ if ( 'upgrade-core' == $action ) {
 	if ( $core || $plugins || $themes )
 		list_translation_updates();
 	unset( $core, $plugins, $themes );
-	do_action('core_upgrade_preamble');
+	/**
+	 * Fires after the core, plugin, and theme update tables.
+	 *
+	 * @since 2.9.0
+	 */
+	do_action( 'core_upgrade_preamble' );
 	echo '</div>';
 	include(ABSPATH . 'wp-admin/admin-footer.php');
 
@@ -627,5 +632,14 @@ if ( 'upgrade-core' == $action ) {
 	require_once( ABSPATH . 'wp-admin/admin-footer.php' );
 
 } else {
-	do_action('update-core-custom_' . $action);
+	/**
+	 * Fires for each custom update action on the WordPress Updates screen.
+	 *
+	 * The dynamic portion of the hook name, $action, refers to the
+	 * passed update action. The hook fires in lieu of all available
+	 * default update actions.
+	 *
+	 * @since 3.2.0
+	 */
+	do_action( "update-core-custom_{$action}" );
 }

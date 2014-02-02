@@ -1167,7 +1167,7 @@ function do_settings_fields($page, $section) {
 		return;
 
 	foreach ( (array) $wp_settings_fields[$page][$section] as $field ) {
-		echo '<tr valign="top">';
+		echo '<tr>';
 		if ( !empty($field['args']['label_for']) )
 			echo '<th scope="row"><label for="' . esc_attr( $field['args']['label_for'] ) . '">' . $field['title'] . '</label></th>';
 		else
@@ -1949,7 +1949,7 @@ function convert_to_screen( $hook_name ) {
 /**
  * Output the HTML for restoring the post data from DOM storage
  *
- * @since 3.6
+ * @since 3.6.0
  * @access private
  */
 function _local_storage_notice() {

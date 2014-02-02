@@ -115,7 +115,10 @@ function wp_reset_query() {
  */
 function wp_reset_postdata() {
 	global $wp_query;
-	$wp_query->reset_postdata();
+
+	if ( isset( $wp_query ) ) {
+		$wp_query->reset_postdata();
+	}
 }
 
 /*
@@ -172,9 +175,10 @@ function is_post_type_archive( $post_types = '' ) {
  * @since 2.0.0
  * @uses $wp_query
  *
+ * @param mixed $attachment Attachment ID, title, slug, or array of such.
  * @return bool
  */
-function is_attachment() {
+function is_attachment( $attachment = '' ) {
 	global $wp_query;
 
 	if ( ! isset( $wp_query ) ) {
@@ -182,7 +186,7 @@ function is_attachment() {
 		return false;
 	}
 
-	return $wp_query->is_attachment();
+	return $wp_query->is_attachment( $attachment );
 }
 
 /**
@@ -3264,17 +3268,24 @@ class WP_Query {
 
 		if ( $this->is_category || $this->is_tag || $this->is_tax ) {
 			if ( $this->is_category ) {
-				$term = get_term( $this->get( 'cat' ), 'category' );
+				if ( $this->get( 'cat' ) ) {
+					$term = get_term( $this->get( 'cat' ), 'category' );
+				} elseif ( $this->get( 'category_name' ) ) {
+					$term = get_term_by( 'slug', $this->get( 'category_name' ), 'category' );
+				}
 			} elseif ( $this->is_tag ) {
 				$term = get_term( $this->get( 'tag_id' ), 'post_tag' );
 			} else {
 				$tax_query_in_and = wp_list_filter( $this->tax_query->queries, array( 'operator' => 'NOT IN' ), 'NOT' );
 				$query = reset( $tax_query_in_and );
 
-				if ( 'term_id' == $query['field'] )
-					$term = get_term( reset( $query['terms'] ), $query['taxonomy'] );
-				else
-					$term = get_term_by( $query['field'], reset( $query['terms'] ), $query['taxonomy'] );
+				if ( $query['terms'] ) {
+					if ( 'term_id' == $query['field'] ) {
+						$term = get_term( reset( $query['terms'] ), $query['taxonomy'] );
+					} else {
+						$term = get_term_by( $query['field'], reset( $query['terms'] ), $query['taxonomy'] );
+					}
+				}
 			}
 
 			if ( ! empty( $term ) && ! is_wp_error( $term ) )  {
@@ -3377,10 +3388,30 @@ class WP_Query {
 	 *
 	 * @since 3.1.0
 	 *
+	 * @param mixed $attachment Attachment ID, title, slug, or array of such.
 	 * @return bool
 	 */
-	function is_attachment() {
-		return (bool) $this->is_attachment;
+	function is_attachment( $attachment = '' ) {
+		if ( ! $this->is_attachment ) {
+			return false;
+		}
+
+		if ( empty( $attachment ) ) {
+			return true;
+		}
+
+		$attachment = (array) $attachment;
+
+		$post_obj = $this->get_queried_object();
+
+		if ( in_array( $post_obj->ID, $attachment ) ) {
+			return true;
+		} elseif ( in_array( $post_obj->post_title, $attachment ) ) {
+			return true;
+		} elseif ( in_array( $post_obj->post_name, $attachment ) ) {
+			return true;
+		}
+		return false;
 	}
 
 	/**

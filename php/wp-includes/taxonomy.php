@@ -289,6 +289,8 @@ function is_taxonomy_hierarchical($taxonomy) {
  *     * If not set, the default is inherited from public.
  * - show_tagcloud - Whether to list the taxonomy in the Tag Cloud Widget.
  *     * If not set, the default is inherited from show_ui.
+ * - show_admin_column - Whether to display a column for the taxonomy on its post type listing screens.
+ *     * Defaults to false.
  * - meta_box_cb - Provide a callback function for the meta box display.
  *     * If not set, defaults to post_categories_meta_box for hierarchical taxonomies
  *     and post_tags_meta_box for non-hierarchical.
@@ -336,6 +338,7 @@ function register_taxonomy( $taxonomy, $object_type, $args = array() ) {
 		'show_in_menu'          => null,
 		'show_in_nav_menus'     => null,
 		'show_tagcloud'         => null,
+		'show_admin_column'     => false,
 		'meta_box_cb'           => null,
 		'capabilities'          => array(),
 		'rewrite'               => true,
@@ -932,7 +935,6 @@ class WP_Tax_Query {
  */
 function get_term($term, $taxonomy, $output = OBJECT, $filter = 'raw') {
 	global $wpdb;
-	$null = null;
 
 	if ( empty($term) ) {
 		$error = new WP_Error('invalid_term', __('Empty Term'));
@@ -951,11 +953,11 @@ function get_term($term, $taxonomy, $output = OBJECT, $filter = 'raw') {
 		if ( is_object($term) )
 			$term = $term->term_id;
 		if ( !$term = (int) $term )
-			return $null;
+			return null;
 		if ( ! $_term = wp_cache_get($term, $taxonomy) ) {
 			$_term = $wpdb->get_row( $wpdb->prepare( "SELECT t.*, tt.* FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.taxonomy = %s AND t.term_id = %d LIMIT 1", $taxonomy, $term) );
 			if ( ! $_term )
-				return $null;
+				return null;
 			wp_cache_add($term, $_term, $taxonomy);
 		}
 	}
@@ -2337,7 +2339,7 @@ function wp_set_object_terms($object_id, $terms, $taxonomy, $append = false) {
  *
  * @package WordPress
  * @subpackage Taxonomy
- * @since 3.6
+ * @since 3.6.0
  * @uses wp_set_object_terms()
  *
  * @param int $object_id The ID of the object to which the terms will be added.
@@ -2354,7 +2356,7 @@ function wp_add_object_terms( $object_id, $terms, $taxonomy ) {
  *
  * @package WordPress
  * @subpackage Taxonomy
- * @since 3.6
+ * @since 3.6.0
  * @uses $wpdb
  *
  * @uses apply_filters() Calls 'delete_term_relationships' hook with object_id and tt_ids as parameters.
