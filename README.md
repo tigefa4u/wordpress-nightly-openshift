@@ -31,7 +31,7 @@ Create an account at http://openshift.redhat.com/ and install the client tools (
 Create a php-5.3 application (you can call your application whatever you want)
 
 ```bash
-$ rhc app create wordpress php-5 mysql-5 --from-code=https://github.com/tigefa4u/wordpress-nightly-openshift.git
+$ rhc app create wordpress php-5.4 mysql-5.4 cron-1.4 --from-code=https://github.com/tigefa4u/wordpress-nightly-openshift.git
 ```
 
 That's it, you can now checkout your application at:
