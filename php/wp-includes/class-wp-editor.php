@@ -31,6 +31,7 @@ final class _WP_Editors {
 		$set = wp_parse_args( $settings,  array(
 			'wpautop' => true, // use wpautop?
 			'media_buttons' => true, // show insert/upload button(s)
+			'default_editor' => '', // When both TinyMCE and Quicktags are used, set which editor is shown on loading the page
 			'textarea_name' => $editor_id, // set the textarea name to something different, square brackets [] can be used here
 			'textarea_rows' => 20,
 			'tabindex' => '',
@@ -100,12 +101,15 @@ final class _WP_Editors {
 		if ( !current_user_can( 'upload_files' ) )
 			$set['media_buttons'] = false;
 
-		if ( self::$this_quicktags && self::$this_tinymce ) {
-			$switch_class = 'html-active';
+		if ( ! self::$this_quicktags && self::$this_tinymce ) {
+			$switch_class = 'tmce-active';
+		} elseif ( self::$this_quicktags && self::$this_tinymce ) {
+			$default_editor = $set['default_editor'] ? $set['default_editor'] : wp_default_editor();
 
-			// 'html' and 'switch-html' are used for the "Text" editor tab.
-			if ( 'html' == wp_default_editor() ) {
+			// 'html' is used for the "Text" editor tab.
+			if ( 'html' === $default_editor ) {
 				add_filter('the_editor_content', 'wp_htmledit_pre');
+				$switch_class = 'html-active';
 			} else {
 				add_filter('the_editor_content', 'wp_richedit_pre');
 				$switch_class = 'tmce-active';
@@ -203,7 +207,7 @@ final class _WP_Editors {
 				$ext_plugins = '';
 
 				if ( $set['teeny'] ) {
-					self::$plugins = $plugins = apply_filters( 'teeny_mce_plugins', array( 'fullscreen', 'link', 'image', 'wordpress', 'wplink' ), $editor_id );
+					self::$plugins = $plugins = apply_filters( 'teeny_mce_plugins', array( 'fullscreen', 'link', 'image', 'wordpress', 'wpeditimage', 'wplink' ), $editor_id );
 				} else {
 					/**
 					 * TinyMCE external plugins filter
@@ -331,8 +335,12 @@ final class _WP_Editors {
 					self::$first_init['external_plugins'] = json_encode( $mce_external_plugins );
 				}
 
-				// WordPress default stylesheet
-				$mce_css = array( self::$baseurl . '/skins/wordpress/wp-content.css' );
+				$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+				$version = 'ver=' . $GLOBALS['wp_version'];
+				$dashicons = includes_url( "css/dashicons$suffix.css?$version" );
+
+				// WordPress default stylesheet and dashicons
+				$mce_css = array( $dashicons, self::$baseurl . '/skins/wordpress/wp-content.css' );
 
 				// load editor_style.css if the current theme supports it
 				if ( ! empty( $GLOBALS['editor_styles'] ) && is_array( $GLOBALS['editor_styles'] ) ) {

@@ -1194,7 +1194,7 @@ function is_blog_installed() {
  * @param string $actionurl URL to add nonce action.
  * @param string $action Optional. Nonce action name.
  * @param string $name Optional. Nonce name.
- * @return string URL with nonce action added.
+ * @return string Escaped URL with nonce action added.
  */
 function wp_nonce_url( $actionurl, $action = -1, $name = '_wpnonce' ) {
 	$actionurl = str_replace( '&amp;', '&', $actionurl );
@@ -1431,6 +1431,23 @@ function path_join( $base, $path ) {
 		return $path;
 
 	return rtrim($base, '/') . '/' . ltrim($path, '/');
+}
+
+/**
+ * Normalize a filesystem path.
+ *
+ * Replaces backslashes with forward slashes for Windows systems,
+ * and ensures no duplicate slashes exist.
+ *
+ * @since 3.9.0
+ *
+ * @param string $path Path to normalize.
+ * @return string Normalized path.
+ */
+function wp_normalize_path( $path ) {
+	$path = str_replace( '\\', '/', $path );
+	$path = preg_replace( '|/+|','/', $path );
+	return $path;
 }
 
 /**
@@ -4095,7 +4112,7 @@ function wp_auth_check_html() {
  *
  * @since 3.6.0
  */
-function wp_auth_check( $response, $data ) {
+function wp_auth_check( $response ) {
 	$response['wp-auth-check'] = is_user_logged_in() && empty( $GLOBALS['login_grace_period'] );
 	return $response;
 }

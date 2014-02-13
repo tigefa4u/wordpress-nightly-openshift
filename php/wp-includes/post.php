@@ -2077,6 +2077,26 @@ function unstick_post($post_id) {
 }
 
 /**
+ * Return the cache key for wp_count_posts() based on the passed arguments
+ *
+ * @since 3.9.0
+ *
+ * @param string $type Optional. Post type to retrieve count
+ * @param string $perm Optional. 'readable' or empty.
+ * @return string The cache key.
+ */
+function _count_posts_cache_key( $type = 'post', $perm = '' ) {
+	$cache_key = 'posts-' . $type;
+	if ( 'readable' == $perm && is_user_logged_in() ) {
+		$post_type_object = get_post_type_object( $type );
+		if ( ! current_user_can( $post_type_object->cap->read_private_posts ) ) {
+			$cache_key .= '_' . $perm . '_' . get_current_user_id();
+		}
+	}
+	return $cache_key;
+}
+
+/**
  * Count number of posts of a post type and if user has permissions to view.
  *
  * This function provides an efficient method of finding the amount of post's
@@ -2101,16 +2121,15 @@ function wp_count_posts( $type = 'post', $perm = '' ) {
 	if ( ! post_type_exists( $type ) )
 		return new stdClass;
 
-	$user = wp_get_current_user();
-
-	$cache_key = 'posts-' . $type;
+	$cache_key = _count_posts_cache_key( $type, $perm );
 
 	$query = "SELECT post_status, COUNT( * ) AS num_posts FROM {$wpdb->posts} WHERE post_type = %s";
 	if ( 'readable' == $perm && is_user_logged_in() ) {
 		$post_type_object = get_post_type_object($type);
-		if ( !current_user_can( $post_type_object->cap->read_private_posts ) ) {
-			$cache_key .= '_' . $perm . '_' . $user->ID;
-			$query .= " AND (post_status != 'private' OR ( post_author = '$user->ID' AND post_status = 'private' ))";
+		if ( ! current_user_can( $post_type_object->cap->read_private_posts ) ) {
+			$query .= $wpdb->prepare( " AND (post_status != 'private' OR ( post_author = %d AND post_status = 'private' ))",
+				get_current_user_id()
+			);
 		}
 	}
 	$query .= ' GROUP BY post_status';
@@ -3730,7 +3749,7 @@ function get_pages( $args = array() ) {
 	$key = md5( serialize( compact(array_keys($defaults)) ) );
 	$last_changed = wp_cache_get( 'last_changed', 'posts' );
 	if ( ! $last_changed ) {
-		$last_changed = microtime();
+		$last_changed = microtime( true );
 		wp_cache_set( 'last_changed', $last_changed, 'posts' );
 	}
 
@@ -4074,6 +4093,17 @@ function wp_insert_attachment($object, $file = false, $parent = 0) {
 
 	// expected_slashed (everything!)
 	$data = compact( array( 'post_author', 'post_date', 'post_date_gmt', 'post_content', 'post_content_filtered', 'post_title', 'post_excerpt', 'post_status', 'post_type', 'comment_status', 'ping_status', 'post_password', 'post_name', 'to_ping', 'pinged', 'post_modified', 'post_modified_gmt', 'post_parent', 'menu_order', 'post_mime_type', 'guid' ) );
+
+	/**
+	 * Filter attachment post data before it is updated in or added
+	 * to the database.
+	 *
+	 * @since 3.9.0
+	 *
+	 * @param array $data   Array of sanitized attachment post data.
+	 * @param array $object Array of un-sanitized attachment post data.
+	 */
+	$data = apply_filters( 'wp_insert_attachment_data', $data, $object );
 	$data = wp_unslash( $data );
 
 	if ( $update ) {
@@ -4744,7 +4774,7 @@ function clean_post_cache( $post ) {
 		do_action( 'clean_page_cache', $post->ID );
 	}
 
-	wp_cache_set( 'last_changed', microtime(), 'posts' );
+	wp_cache_set( 'last_changed', microtime( true ), 'posts' );
 }
 
 /**
@@ -4883,6 +4913,11 @@ function _transition_post_status($new_status, $old_status, $post) {
 			wp_cache_delete( "lastpostmodified:$timezone", 'timeinfo' );
 			wp_cache_delete( "lastpostdate:$timezone", 'timeinfo' );
 		}
+	}
+
+	if ( $new_status !== $old_status ) {
+		wp_cache_delete( _count_posts_cache_key( $post->post_type ), 'counts' );
+		wp_cache_delete( _count_posts_cache_key( $post->post_type, 'readable' ), 'counts' );
 	}
 
 	// Always clears the hook in case the post status bounced from future to draft.

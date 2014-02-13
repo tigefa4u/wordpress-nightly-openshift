@@ -634,7 +634,7 @@ endif;
 
 if ( !function_exists('wp_set_auth_cookie') ) :
 /**
- * Sets the authentication cookies based User ID.
+ * Sets the authentication cookies based on user ID.
  *
  * The $remember parameter increases the time that the cookie will be kept. The
  * default the cookie is kept without remembering is two days. When $remember is
@@ -1273,12 +1273,14 @@ endif;
 
 if ( !function_exists('wp_new_user_notification') ) :
 /**
- * Notify the blog admin of a new user, normally via email.
+ * Email login credentials to a newly-registered user.
+ *
+ * A new user registration notification is also sent to admin email.
  *
  * @since 2.0.0
  *
- * @param int $user_id User ID
- * @param string $plaintext_pass Optional. The user's plaintext password
+ * @param int    $user_id        User ID.
+ * @param string $plaintext_pass Optional. The user's plaintext password. Default empty.
  */
 function wp_new_user_notification($user_id, $plaintext_pass = '') {
 	$user = get_userdata( $user_id );

@@ -44,8 +44,9 @@
 		sensitivity = sensitivity || 2000;
 
 		if ( $.support.transition ) {
-			if ( ! (selector instanceof $) )
+			if ( ! (selector instanceof $) ) {
 				selector = $( selector );
+			}
 
 			// Resolve the deferred when the first element finishes animating.
 			selector.first().one( $.support.transition.end, deferred.resolve );
@@ -216,7 +217,7 @@
 		 *
 		 * @param {string} id
 		 * @returns {wp.media.controller.State} Returns a State model
-		 *	 from the StateMachine collection
+		 *   from the StateMachine collection
 		 */
 		state: function( id ) {
 			this.states = this.states || new Backbone.Collection();
@@ -269,7 +270,7 @@
 		 * active state.
 		 *
 		 * @returns {wp.media.controller.State} Returns a State model
-		 *	 from the StateMachine collection
+		 *    from the StateMachine collection
 		 */
 		lastState: function() {
 			if ( this._lastState ) {
@@ -295,6 +296,11 @@
 
 	/**
 	 * wp.media.controller.State
+	 *
+	 * A state is a step in a workflow that when set will trigger
+	 * the controllers for the regions to be updated as specified. This
+	 * class is the base class that the various states used in the media
+	 * modals extend.
 	 *
 	 * @constructor
 	 * @augments Backbone.Model
@@ -535,11 +541,13 @@
 				}) );
 			}
 
-			if ( ! this.get('edge') )
+			if ( ! this.get('edge') ) {
 				this.set( 'edge', 120 );
+			}
 
-			if ( ! this.get('gutter') )
+			if ( ! this.get('gutter') ) {
 				this.set( 'gutter', 8 );
+			}
 
 			this.resetDisplays();
 		},
@@ -789,9 +797,7 @@
 			if ( ! this.get('AttachmentView') ) {
 				this.set( 'AttachmentView', media.view.Attachment.EditLibrary );
 			}
-			/**
-			 * call 'initialize' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.initialize.apply( this, arguments );
 		},
 
@@ -805,9 +811,7 @@
 			this.get('library').observe( wp.Uploader.queue );
 
 			this.frame.on( 'content:render:browse', this.gallerySettings, this );
-			/**
-			 * call 'activate' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.activate.apply( this, arguments );
 		},
 
@@ -816,9 +820,7 @@
 			this.get('library').unobserve( wp.Uploader.queue );
 
 			this.frame.off( 'content:render:browse', this.gallerySettings, this );
-			/**
-			 * call 'deactivate' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.deactivate.apply( this, arguments );
 		},
 
@@ -883,9 +885,6 @@
 			if ( ! this.get('library') ) {
 				this.set( 'library', media.query({ type: 'image' }) );
 			}
-			/**
-			 * call 'initialize' directly on the parent class
-			 */
 			media.controller.Library.prototype.initialize.apply( this, arguments );
 		},
 
@@ -893,18 +892,15 @@
 			var library = this.get('library'),
 				edit    = this.frame.state('gallery-edit').get('library');
 
-			if ( this.editLibrary && this.editLibrary !== edit )
+			if ( this.editLibrary && this.editLibrary !== edit ) {
 				library.unobserve( this.editLibrary );
+			}
 
 			// Accepts attachments that exist in the original library and
 			// that do not exist in gallery's library.
 			library.validator = function( attachment ) {
-				return !! this.mirroring.get( attachment.cid )
-					&& ! edit.get( attachment.cid )
-					/**
-					 * call 'validator' directly on wp.media.model.Selection
-					 */
-					&& media.model.Selection.prototype.validator.apply( this, arguments );
+				return !! this.mirroring.get( attachment.cid ) && ! edit.get( attachment.cid ) &&
+					media.model.Selection.prototype.validator.apply( this, arguments );
 			};
 
 			// Reset the library to ensure that all attachments are re-added
@@ -913,9 +909,7 @@
 			library.reset( library.mirroring.models, { silent: true });
 			library.observe( edit );
 			this.editLibrary = edit;
-			/**
-			 * call 'activate' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.activate.apply( this, arguments );
 		}
 	});
@@ -946,9 +940,7 @@
 			if ( ! this.get('library') ) {
 				this.set( 'library', media.query({ type: 'image' }) );
 			}
-			/**
-			 * call 'initialize' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.initialize.apply( this, arguments );
 
 			library    = this.get('library');
@@ -977,17 +969,13 @@
 		activate: function() {
 			this.updateSelection();
 			this.frame.on( 'open', this.updateSelection, this );
-			/**
-			 * call 'activate' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.activate.apply( this, arguments );
 		},
 
 		deactivate: function() {
 			this.frame.off( 'open', this.updateSelection, this );
-			/**
-			 * call 'deactivate' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.deactivate.apply( this, arguments );
 		},
 
@@ -1034,9 +1022,7 @@
 			if ( ! this.get('library') ) {
 				this.set( 'library', media.query({ type: 'image' }) );
 			}
-			/**
-			 * call 'initialize' directly on the parent class
-			 */
+
 			media.controller.Library.prototype.initialize.apply( this, arguments );
 
 			library    = this.get('library');
@@ -1064,17 +1050,7 @@
 
 		activate: function() {
 			this.updateSelection();
-			/**
-			 * call 'activate' directly on the parent class
-			 */
 			media.controller.Library.prototype.activate.apply( this, arguments );
-		},
-
-		deactivate: function() {
-			/**
-			 * call 'deactivate' directly on the parent class
-			 */
-			media.controller.Library.prototype.deactivate.apply( this, arguments );
 		},
 
 		updateSelection: function() {
@@ -1137,8 +1113,9 @@
 			if ( attributes.scanners.length ) {
 				scanners = attributes.scanners = $.when.apply( $, attributes.scanners );
 				scanners.always( function() {
-					if ( embed.get('scanners') === scanners )
+					if ( embed.get('scanners') === scanners ) {
 						embed.set( 'loading', false );
+					}
 				});
 			} else {
 				attributes.scanners = null;
@@ -1263,6 +1240,9 @@
 	/**
 	 * wp.media.view.Frame
 	 *
+	 * A frame is a composite view consisting of one or more regions and one or more
+	 * states. Only one state can be active at any given moment.
+	 *
 	 * @constructor
 	 * @augments wp.media.View
 	 * @augments wp.Backbone.View
@@ -1322,6 +1302,8 @@
 	/**
 	 * wp.media.view.MediaFrame
 	 *
+	 * Type of frame used to create the media modal.
+	 *
 	 * @constructor
 	 * @augments wp.media.view.Frame
 	 * @augments wp.media.View
@@ -1338,9 +1320,7 @@
 		 * @global wp.Uploader
 		 */
 		initialize: function() {
-			/**
-			 * call 'initialize' directly on the parent class
-			 */
+
 			media.view.Frame.prototype.initialize.apply( this, arguments );
 
 			_.defaults( this.options, {
@@ -1544,6 +1524,8 @@
 
 	/**
 	 * wp.media.view.MediaFrame.Select
+	 *
+	 * Type of media frame that is used to select an item or items from the media library
 	 *
 	 * @constructor
 	 * @augments wp.media.view.MediaFrame
@@ -1829,10 +1811,11 @@
 					text:     l10n.cancelGalleryTitle,
 					priority: 20,
 					click:    function() {
-						if ( previous )
+						if ( previous ) {
 							frame.setState( previous );
-						else
+						} else {
 							frame.close();
+						}
 					}
 				},
 				separateCancel: new media.View({
@@ -2347,10 +2330,9 @@
 		 */
 		keydown: function( event ) {
 			// Close the modal when escape is pressed.
-			if ( 27 === event.which ) {
-				event.preventDefault();
+			if ( 27 === event.which && this.$el.is(':visible') ) {
 				this.escape();
-				return;
+				event.stopImmediatePropagation();
 			}
 		}
 	});
@@ -2496,8 +2478,9 @@
 			media.transition( $el ).done( function() {
 				// Transition end events are subject to race conditions.
 				// Make sure that the value is set as intended.
-				if ( '0' === $el.css('opacity') )
+				if ( '0' === $el.css('opacity') ) {
 					$el.hide();
+				}
 			});
 		}
 	});
@@ -3024,8 +3007,9 @@
 			// value to the `model` and remove it from the `options object.
 			_.each( this.defaults, function( def, key ) {
 				var value = this.options[ key ];
-				if ( _.isUndefined( value ) )
+				if ( _.isUndefined( value ) ) {
 					return;
+				}
 
 				this.model.set( key, value );
 				delete this.options[ key ];
@@ -3492,8 +3476,9 @@
 			options.buttons  = this.buttons;
 			options.describe = this.controller.state().get('describe');
 
-			if ( 'image' === options.type )
+			if ( 'image' === options.type ) {
 				options.size = this.imageSize();
+			}
 
 			options.can = {};
 			if ( options.nonces ) {
@@ -3501,17 +3486,19 @@
 				options.can.save = !! options.nonces.update;
 			}
 
-			if ( this.controller.state().get('allowLocalEdits') )
+			if ( this.controller.state().get('allowLocalEdits') ) {
 				options.allowLocalEdits = true;
+			}
 
 			this.views.detach();
 			this.$el.html( this.template( options ) );
 
 			this.$el.toggleClass( 'uploading', options.uploading );
-			if ( options.uploading )
+			if ( options.uploading ) {
 				this.$bar = this.$('.media-progress-bar div');
-			else
+			} else {
 				delete this.$bar;
+			}
 
 			// Check if the model is selected.
 			this.updateSelect();
@@ -4035,8 +4022,9 @@
 		},
 
 		refreshSortable: function() {
-			if ( ! this.options.sortable || ! $.fn.sortable )
+			if ( ! this.options.sortable || ! $.fn.sortable ) {
 				return;
+			}
 
 			// If the `collection` has a `comparator`, disable sorting.
 			var collection = this.collection,
@@ -4388,8 +4376,9 @@
 
 			if ( ! this.collection.length ) {
 				this.collection.more().done( function() {
-					if ( ! view.collection.length )
+					if ( ! view.collection.length ) {
 						view.createUploader();
+					}
 				});
 			}
 		},
@@ -4705,7 +4694,7 @@
 				}
 			// Handle checkboxes.
 			} else if ( $setting.is('input[type="checkbox"]') ) {
-				$setting.attr( 'checked', !! value );
+				$setting.prop( 'checked', !! value );
 			}
 		},
 		/**

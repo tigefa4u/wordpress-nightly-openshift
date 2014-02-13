@@ -165,7 +165,7 @@ var wpLink;
 		},
 
 		htmlUpdate: function() {
-			var attrs, html, begin, end, cursor,
+			var attrs, html, begin, end, cursor, title, selection,
 				textarea = wpLink.textarea;
 
 			if ( ! textarea )
@@ -180,10 +180,14 @@ var wpLink;
 			// Build HTML
 			html = '<a href="' + attrs.href + '"';
 
-			if ( attrs.title )
-				html += ' title="' + attrs.title + '"';
-			if ( attrs.target )
+			if ( attrs.title ) {
+				title = attrs.title.replace( /</g, '&lt;' ).replace( />/g, '&gt;' ).replace( /"/g, '&quot;' );
+				html += ' title="' + title + '"';
+			}
+
+			if ( attrs.target ) {
 				html += ' target="' + attrs.target + '"';
+			}
 
 			html += '>';
 
@@ -303,6 +307,11 @@ var wpLink;
 		keydown: function( event ) {
 			var fn, key = $.ui.keyCode;
 
+			if ( key.ESCAPE === event.which ) {
+				wpLink.close();
+				event.stopImmediatePropagation();
+			}
+
 			if ( event.which !== key.UP && event.which !== key.DOWN ) {
 				return;
 			}
@@ -316,13 +325,6 @@ var wpLink;
 
 		keyup: function( event ) {
 			var key = $.ui.keyCode;
-
-			if ( event.which === key.ESCAPE ) {
-				event.stopImmediatePropagation();
-				if ( ! $(document).triggerHandler( 'wp_CloseOnEscape', [{ event: event, what: 'wplink', cb: wpLink.close }] ) )
-					wpLink.close();
-				return false;
-			}
 
 			if ( event.which === key.UP || event.which === key.DOWN ) {
 				clearInterval( wpLink.keyInterval );

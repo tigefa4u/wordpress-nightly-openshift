@@ -181,13 +181,55 @@ function image_downsize($id, $size = 'medium') {
 }
 
 /**
- * Registers a new image size
+ * Register a new image size.
  *
  * @since 2.9.0
+ *
+ * @param string $name   The image size name.
+ * @param int    $width  The image's width.
+ * @param int    $height The image's width.
+ * @param bool   $width  Whether to crop the image to fit the dimensions. Default false.
  */
 function add_image_size( $name, $width = 0, $height = 0, $crop = false ) {
 	global $_wp_additional_image_sizes;
-	$_wp_additional_image_sizes[$name] = array( 'width' => absint( $width ), 'height' => absint( $height ), 'crop' => (bool) $crop );
+	$_wp_additional_image_sizes[ $name ] = array(
+		'width'  => absint( $width ),
+		'height' => absint( $height ),
+		'crop'   => (bool) $crop,
+	);
+}
+
+/**
+ * Check if an image size exists.
+ *
+ * @since 3.9.0
+ *
+ * @param string $name The image size to check.
+ * @return bool True if the image size exists, false if not.
+ */
+function has_image_size( $name ) {
+	global $_wp_additional_image_sizes;
+
+	return isset( $_wp_additional_image_sizes[ $name ] );
+}
+
+/**
+ * Remove a new image size.
+ *
+ * @since 3.9.0
+ *
+ * @param string $name The image size to remove.
+ * @return bool True if the image size was successfully removed, false on failure.
+ */
+function remove_image_size( $name ) {
+	global $_wp_additional_image_sizes;
+
+	if ( isset( $_wp_additional_image_sizes[ $name ] ) ) {
+		unset( $_wp_additional_image_sizes[ $name ] );
+		return true;
+	}
+
+	return false;
 }
 
 /**
@@ -1233,6 +1275,14 @@ function wp_video_shortcode( $attr, $content = '' ) {
 			$html .= sprintf( $source, $type['type'], esc_url( $$fallback ) );
 		}
 	}
+
+	if ( ! empty( $content ) ) {
+		if ( false !== strpos( $content, "\n" ) )
+			$content = str_replace( array( "\r\n", "\n", "\t" ), '', $content );
+
+		$html .= trim( $content );
+	}
+
 	if ( 'mediaelement' === $library )
 		$html .= wp_mediaelement_fallback( $fileurl );
 	$html .= '</video>';
@@ -2185,4 +2235,27 @@ function get_post_galleries_images( $post = 0 ) {
 function get_post_gallery_images( $post = 0 ) {
 	$gallery = get_post_gallery( $post, false );
 	return empty( $gallery['src'] ) ? array() : $gallery['src'];
+}
+
+/**
+ * If an attachment is missing its metadata, try to regenerate it
+ *
+ * @param post $attachment Post object.
+ */
+function maybe_regenerate_attachment_metadata( $attachment ) {
+	if ( empty( $attachment ) || ( empty( $attachment->ID ) || ! $attachment_id = (int) $attachment->ID ) ) {
+		return;
+	}
+
+	$file = get_attached_file( $attachment_id );
+	$meta = wp_get_attachment_metadata( $attachment_id );
+	if ( empty( $meta ) && file_exists( $file ) ) {
+		$_meta = get_post_meta( $attachment_id );
+		$regeneration_lock = 'wp_regenerating_' . $attachment_id;
+		if ( ! array_key_exists( '_wp_attachment_metadata', $_meta ) && ! get_transient( $regeneration_lock ) ) {
+			set_transient( $regeneration_lock, $file );
+			wp_update_attachment_metadata( $attachment_id, wp_generate_attachment_metadata( $attachment_id, $file ) );
+			delete_transient( $regeneration_lock );
+		}
+	}
 }

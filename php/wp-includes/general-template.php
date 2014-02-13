@@ -985,7 +985,7 @@ function wp_get_archives($args = '') {
 
 	$last_changed = wp_cache_get( 'last_changed', 'posts' );
 	if ( ! $last_changed ) {
-		$last_changed = microtime();
+		$last_changed = microtime( true );
 		wp_cache_set( 'last_changed', $last_changed, 'posts' );
 	}
 
@@ -1499,9 +1499,11 @@ function the_time( $d = '' ) {
  *
  * @since 1.5.0
  *
- * @param string $d Optional Either 'G', 'U', or php date format defaults to the value specified in the time_format option.
- * @param int|object $post Optional post ID or object. Default is global $post object.
- * @return string
+ * @param string      $d    Optional. Format to use for retrieving the time the post
+ *                          was written. Either 'G', 'U', or php date format defaults
+ *                          to the value specified in the time_format option. Default empty.
+ * @param int|WP_Post $post WP_Post object or ID. Default is global $post object.
+ * @return string|int Formatted date string, or Unix timestamp.
  */
 function get_the_time( $d = '', $post = null ) {
 	$post = get_post($post);
@@ -1518,13 +1520,14 @@ function get_the_time( $d = '', $post = null ) {
  *
  * @since 2.0.0
  *
- * @param string $d Optional Either 'G', 'U', or php date format.
- * @param bool $gmt Optional, default is false. Whether to return the gmt time.
- * @param int|object $post Optional post ID or object. Default is global $post object.
- * @param bool $translate Whether to translate the time string
- * @return string
+ * @param string      $d         Optional. Format to use for retrieving the time the post
+ *                               was written. Either 'G', 'U', or php date format. Default 'U'.
+ * @param bool        $gmt       Optional. Whether to retrieve the GMT time. Default false.
+ * @param int|WP_Post $post      WP_Post object or ID. Default is global $post object.
+ * @param bool        $translate Whether to translate the time string. Default false.
+ * @return string|int Formatted date string, or Unix timestamp.
  */
-function get_post_time( $d = 'U', $gmt = false, $post = null, $translate = false ) { // returns timestamp
+function get_post_time( $d = 'U', $gmt = false, $post = null, $translate = false ) {
 	$post = get_post($post);
 
 	if ( $gmt )
@@ -2103,7 +2106,7 @@ function register_admin_color_schemes() {
 	$suffix .= defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
 	wp_admin_css_color( 'fresh', _x( 'Default', 'admin color scheme' ),
-		admin_url( "css/colors$suffix.css" ),
+		false,
 		array( '#222', '#333', '#0074a2', '#2ea2cc' ),
 		array( 'base' => '#999', 'focus' => '#2ea2cc', 'current' => '#fff' )
 	);

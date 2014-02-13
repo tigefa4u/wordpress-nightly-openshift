@@ -100,6 +100,17 @@ div.mce-statusbar {
 	margin-right: -16px;
 }
 
+/* Charmap modal */
+.mce-charmap td {
+	padding: 0;
+}
+
+.mce-charmap td div {
+	width: 18px;
+	height: 22px;
+	line-height: 22px;
+}
+
 /* Icons */
 .mce-toolbar .mce-ico {
 	color: #777;
@@ -453,6 +464,15 @@ i.mce-i-wp_page:before {
 .quicktags-toolbar input:hover {
 	border-color: #aaa;
 	background: #ddd;
+}
+
+.quicktags-toolbar input:focus {
+	border-color: #777;
+	outline: 0;
+}
+
+.quicktags-toolbar input:active {
+	border-color: #aaa;
 }
 
 .quicktags-toolbar input[value="link"] {
@@ -1077,6 +1097,34 @@ i.mce-i-wp_page:before {
 	-moz-osx-font-smoothing: grayscale;
 	color: #999;
 	padding-left: 12px;
+}
+
+/* from colors.css
+.clearlooks2 {
+	box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+}
+
+.clearlooks2 .mceMiddle span,
+.clearlooks2 .mceMiddle .mceLeft,
+.clearlooks2 .mceMiddle .mceRight,
+.clearlooks2 .mceBottom,
+.clearlooks2 .mceBottom .mceLeft,
+.clearlooks2 .mceBottom .mceCenter,
+.clearlooks2 .mceBottom .mceRight {
+	background-color: #fcfcfc;
+}
+
+.clearlooks2 .mceTop span,
+.clearlooks2 .mceFocus .mceTop span {
+	color: #222;
+}
+
+.clearlooks2 .mceClose:before {
+	color: #999;
+}
+
+.clearlooks2 .mceClose:hover:before {
+	color: #2ea2cc;
 }
 */
 /* Distraction Free Writing mode

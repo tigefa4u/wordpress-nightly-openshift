@@ -802,13 +802,23 @@ function wp_import_upload_form( $action ) {
  *
  * @since 2.5.0
  *
- * @param string $id String for use in the 'id' attribute of tags.
- * @param string $title Title of the meta box.
- * @param string $callback Function that fills the box with the desired content. The function should echo its output.
- * @param string|object $screen Optional. The screen on which to show the box (post, page, link). Defaults to current screen.
- * @param string $context Optional. The context within the page where the boxes should show ('normal', 'advanced').
- * @param string $priority Optional. The priority within the context where the boxes should show ('high', 'low').
- * @param array $callback_args Optional. Data that should be set as the "args" property of the box array (which is the second parameter passed to your callback).
+ * @param string           $id            String for use in the 'id' attribute of tags.
+ * @param string           $title         Title of the meta box.
+ * @param callback         $callback      Function that fills the box with the desired content.
+ *                                        The function should echo its output.
+ * @param string|WP_Screen $screen        Optional. The screen on which to show the box (like a post
+ *                                        type, 'link', or 'comment'). Default is the current screen.
+ * @param string           $context       Optional. The context within the screen where the boxes
+ *                                        should display. Available contexts vary from screen to
+ *                                        screen. Post edit screen contexts include 'normal', 'side',
+ *                                        and 'advanced'. Comments screen contexts include 'normal'
+ *                                        and 'side'. Menus meta boxes (accordion sections) all use
+ *                                        the 'side' context. Global default is 'advanced'.
+ * @param string           $priority      Optional. The priority within the context where the boxes
+ *                                        should show ('high', 'low'). Default 'default'.
+ * @param array            $callback_args Optional. Data that should be set as the $args property
+ *                                        of the box array (which is the second parameter passed
+ *                                        to your callback). Default null.
  */
 function add_meta_box( $id, $title, $callback, $screen = null, $context = 'advanced', $priority = 'default', $callback_args = null ) {
 	global $wp_meta_boxes;
@@ -1603,21 +1613,26 @@ function compression_test() {
 }
 
 /**
- * Echos a submit button, with provided text and appropriate class
+ * Echoes a submit button, with provided text and appropriate class(es).
  *
  * @since 3.1.0
  *
- * @param string $text The text of the button (defaults to 'Save Changes')
- * @param string $type The type of button. One of: primary, secondary, delete
- * @param string $name The HTML name of the submit button. Defaults to "submit". If no id attribute
- *               is given in $other_attributes below, $name will be used as the button's id.
- * @param bool $wrap True if the output button should be wrapped in a paragraph tag,
- * 			   false otherwise. Defaults to true
- * @param array|string $other_attributes Other attributes that should be output with the button,
- *                     mapping attributes to their values, such as array( 'tabindex' => '1' ).
- *                     These attributes will be output as attribute="value", such as tabindex="1".
- *                     Defaults to no other attributes. Other attributes can also be provided as a
- *                     string such as 'tabindex="1"', though the array format is typically cleaner.
+ * @see get_submit_button()
+ *
+ * @param string       $text             The text of the button (defaults to 'Save Changes')
+ * @param string       $type             Optional. The type and CSS class(es) of the button. Core values
+ *                                       include 'primary', 'secondary', 'delete'. Default 'primary'
+ * @param string       $name             The HTML name of the submit button. Defaults to "submit". If no
+ *                                       id attribute is given in $other_attributes below, $name will be
+ *                                       used as the button's id.
+ * @param bool         $wrap             True if the output button should be wrapped in a paragraph tag,
+ *                                       false otherwise. Defaults to true
+ * @param array|string $other_attributes Other attributes that should be output with the button, mapping
+ *                                       attributes to their values, such as setting tabindex to 1, etc.
+ *                                       These key/value attribute pairs will be output as attribute="value",
+ *                                       where attribute is the key. Other attributes can also be provided
+ *                                       as a string such as 'tabindex="1"', though the array format is
+ *                                       preferred. Default null.
  */
 function submit_button( $text = null, $type = 'primary', $name = 'submit', $wrap = true, $other_attributes = null ) {
 	echo get_submit_button( $text, $type, $name, $wrap, $other_attributes );
