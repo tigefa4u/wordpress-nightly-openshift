@@ -197,8 +197,10 @@ define("tinymce/pasteplugin/Utils", [
  * This class contains logic for getting HTML contents out of the clipboard.
  *
  * We need to make a lot of ugly hacks to get the contents out of the clipboard since
- * the W3C Clipboard API is broken in all browsers: Gecko/WebKit/Blink. We might rewrite
- * this the way those API:s stabilize.
+ * the W3C Clipboard API is broken in all browsers that have it: Gecko/WebKit/Blink.
+ * We might rewrite this the way those API:s stabilize. Browsers doesn't handle pasting
+ * from applications like Word the same way as it does when pasting into a contentEditable area
+ * so we need to do lots of extra work to try to get to this clipboard data.
  *
  * Current implementation steps:
  *  1. On keydown with paste keys Ctrl+V or Shift+Insert create
@@ -290,17 +292,19 @@ define("tinymce/pasteplugin/Clipboard", [
 		}
 
 		/**
-		 * Creates a paste bin element and moves the selection into that element. It will also move the element offscreen
-		 * so that resize handles doesn't get produced on IE or Drag handles or Firefox.
+		 * Creates a paste bin element as close as possible to the current caret location and places the focus inside that element
+		 * so that when the real paste event occurs the contents gets inserted into this element
+		 * instead of the current editor selection element.
 		 */
 		function createPasteBin() {
 			var dom = editor.dom, body = editor.getBody();
 			var viewport = editor.dom.getViewPort(editor.getWin()), scrollTop = viewport.y, top = 20;
+			var scrollContainer;
 
 			lastRng = editor.selection.getRng();
 
 			if (editor.inline) {
-				var scrollContainer = editor.selection.getScrollContainer();
+				scrollContainer = editor.selection.getScrollContainer();
 
 				if (scrollContainer) {
 					scrollTop = scrollContainer.scrollTop;
@@ -311,8 +315,25 @@ define("tinymce/pasteplugin/Clipboard", [
 			// We want the paste bin to be as close to the caret as possible to avoid scrolling
 			if (lastRng.getClientRects) {
 				var rects = lastRng.getClientRects();
+
 				if (rects.length) {
+					// Client rects gets us closes to the actual
+					// caret location in for example a wrapped paragraph block
 					top = scrollTop + (rects[0].top - dom.getPos(body).y);
+				} else {
+					top = scrollTop;
+
+					// Check if we can find a closer location by checking the range element
+					var container = lastRng.startContainer;
+					if (container) {
+						if (container.nodeType == 3 && container.parentNode != body) {
+							container = container.parentNode;
+						}
+
+						if (container.nodeType == 1) {
+							top = dom.getPos(container, scrollContainer || body).y;
+						}
+					}
 				}
 			}
 
@@ -401,7 +422,11 @@ define("tinymce/pasteplugin/Clipboard", [
 			var data = {};
 
 			if (dataTransfer && dataTransfer.types) {
-				data['text/plain'] = dataTransfer.getData('Text');
+				// Use old WebKit API
+				var legacyText = dataTransfer.getData('Text');
+				if (legacyText && legacyText.length > 0) {
+					data['text/plain'] = legacyText;
+				}
 
 				for (var i = 0; i < dataTransfer.types.length; i++) {
 					var contentType = dataTransfer.types[i];
@@ -423,19 +448,65 @@ define("tinymce/pasteplugin/Clipboard", [
 			return getDataTransferItems(clipboardEvent.clipboardData || editor.getDoc().dataTransfer);
 		}
 
+		/**
+		 * Checks if the clipboard contains image data if it does it will take that data
+		 * and convert it into a data url image and paste that image at the caret location.
+		 *
+		 * @param  {ClipboardEvent} e Paste event object.
+		 * @param  {Object} clipboardContent Collection of clipboard contents.
+		 * @return {Boolean} true/false if the image data was found or not.
+		 */
+		function pasteImageData(e, clipboardContent) {
+			function pasteImage(item) {
+				if (items[i].type == 'image/png') {
+					var reader = new FileReader();
+
+					reader.onload = function() {
+						pasteHtml('<img src="' + reader.result + '">');
+					};
+
+					reader.readAsDataURL(item.getAsFile());
+
+					return true;
+				}
+			}
+
+			// If paste data images are disabled or there is HTML or plain text
+			// contents then proceed with the normal paste process
+			if (!editor.settings.paste_data_images || "text/html" in clipboardContent || "text/plain" in clipboardContent) {
+				return;
+			}
+
+			if (e.clipboardData) {
+				var items = e.clipboardData.items;
+
+				if (items) {
+					for (var i = 0; i < items.length; i++) {
+						if (pasteImage(items[i])) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+
 		function getCaretRangeFromEvent(e) {
 			var doc = editor.getDoc(), rng;
 
 			if (doc.caretPositionFromPoint) {
-				var point = doc.caretPositionFromPoint(e.pageX, e.pageY);
+				var point = doc.caretPositionFromPoint(e.clientX, e.clientY);
 				rng = doc.createRange();
 				rng.setStart(point.offsetNode, point.offset);
 				rng.collapse(true);
 			} else if (doc.caretRangeFromPoint) {
-				rng = doc.caretRangeFromPoint(e.pageX, e.pageY);
+				rng = doc.caretRangeFromPoint(e.clientX, e.clientY);
 			}
 
 			return rng;
+		}
+
+		function hasContentType(clipboardContent, mimeType) {
+			return mimeType in clipboardContent && clipboardContent[mimeType].length > 0;
 		}
 
 		function registerEventHandlers() {
@@ -476,6 +547,11 @@ define("tinymce/pasteplugin/Clipboard", [
 					return;
 				}
 
+				if (pasteImageData(e, clipboardContent)) {
+					removePasteBin();
+					return;
+				}
+
 				// Not a keyboard paste prevent default paste and try to grab the clipboard contents using different APIs
 				if (!isKeyBoardPaste) {
 					e.preventDefault();
@@ -503,6 +579,11 @@ define("tinymce/pasteplugin/Clipboard", [
 
 					removePasteBin();
 
+					// Always use pastebin HTML if it's available since it contains Word contents
+					if (!plainTextMode && isKeyBoardPaste && html && html != pasteBinDefaultContent) {
+						clipboardContent['text/html'] = html;
+					}
+
 					if (html == pasteBinDefaultContent || !isKeyBoardPaste) {
 						html = clipboardContent['text/html'] || clipboardContent['text/plain'] || pasteBinDefaultContent;
 
@@ -513,6 +594,11 @@ define("tinymce/pasteplugin/Clipboard", [
 
 							return;
 						}
+					}
+
+					// Force plain text mode if we only got a text/plain content type
+					if (!hasContentType(clipboardContent, 'text/html') && hasContentType(clipboardContent, 'text/plain')) {
+						plainTextMode = true;
 					}
 
 					if (plainTextMode) {
@@ -618,8 +704,15 @@ define("tinymce/pasteplugin/WordFilter", [
 	"tinymce/html/Node",
 	"tinymce/pasteplugin/Utils"
 ], function(Tools, DomParser, Schema, Serializer, Node, Utils) {
+	/**
+	 * Checks if the specified content is from any of the following sources: MS Word/Office 365/Google docs.
+	 */
 	function isWordContent(content) {
-		return (/<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^'']*\bmso-|w:WordDocument/i).test(content);
+		return (
+			(/<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^'']*\bmso-|w:WordDocument/i).test(content) ||
+			(/class="OutlineElement/).test(content) ||
+			(/id="?docs\-internal\-guid\-/.test(content))
+		);
 	}
 
 	function WordFilter(editor) {
@@ -630,7 +723,7 @@ define("tinymce/pasteplugin/WordFilter", [
 
 			retainStyleProperties = settings.paste_retain_style_properties;
 			if (retainStyleProperties) {
-				validStyles = Tools.makeMap(retainStyleProperties);
+				validStyles = Tools.makeMap(retainStyleProperties.split(/[, ]/));
 			}
 
 			/**
@@ -731,6 +824,8 @@ define("tinymce/pasteplugin/WordFilter", [
 			}
 
 			function filterStyles(node, styleValue) {
+				var outputStyles = {}, styles = editor.dom.parseStyle(styleValue);
+
 				// Parse out list indent level for lists
 				if (node.name === 'p') {
 					var matches = /mso-list:\w+ \w+([0-9]+)/.exec(styleValue);
@@ -740,40 +835,76 @@ define("tinymce/pasteplugin/WordFilter", [
 					}
 				}
 
-				if (editor.getParam("paste_retain_style_properties", "none")) {
-					var outputStyle = "";
+				Tools.each(styles, function(value, name) {
+					// Convert various MS styles to W3C styles
+					switch (name) {
+						case "horiz-align":
+							name = "text-align";
+							break;
 
-					Tools.each(editor.dom.parseStyle(styleValue), function(value, name) {
-						// Convert various MS styles to W3C styles
-						switch (name) {
-							case "horiz-align":
-								name = "text-align";
+						case "vert-align":
+							name = "vertical-align";
+							break;
+
+						case "font-color":
+						case "mso-foreground":
+							name = "color";
+							break;
+
+						case "mso-background":
+						case "mso-highlight":
+							name = "background";
+							break;
+
+						case "font-weight":
+						case "font-style":
+							if (value != "normal") {
+								outputStyles[name] = value;
+							}
+							return;
+
+						case "mso-element":
+							// Remove track changes code
+							if (/^(comment|comment-list)$/i.test(value)) {
+								node.remove();
 								return;
+							}
 
-							case "vert-align":
-								name = "vertical-align";
-								return;
-
-							case "font-color":
-							case "mso-foreground":
-								name = "color";
-								return;
-
-							case "mso-background":
-							case "mso-highlight":
-								name = "background";
-								break;
-						}
-
-						// Output only valid styles
-						if (retainStyleProperties == "all" || (validStyles && validStyles[name])) {
-							outputStyle += name + ':' + value + ';';
-						}
-					});
-
-					if (outputStyle) {
-						return outputStyle;
+							break;
 					}
+
+					if (name.indexOf('mso-comment') === 0) {
+						node.remove();
+						return;
+					}
+
+					// Never allow mso- prefixed names
+					if (name.indexOf('mso-') === 0) {
+						return;
+					}
+
+					// Output only valid styles
+					if (retainStyleProperties == "all" || (validStyles && validStyles[name])) {
+						outputStyles[name] = value;
+					}
+				});
+
+				// Convert bold style to "b" element
+				if (/(bold)/i.test(outputStyles["font-weight"])) {
+					delete outputStyles["font-weight"];
+					node.wrap(new Node("b", 1));
+				}
+
+				// Convert italic style to "i" element
+				if (/(italic)/i.test(outputStyles["font-style"])) {
+					delete outputStyles["font-style"];
+					node.wrap(new Node("i", 1));
+				}
+
+				// Serialize the styles and see if there is something left to keep
+				outputStyles = editor.dom.serializeStyle(outputStyles, node.name);
+				if (outputStyles) {
+					return outputStyles;
 				}
 
 				return null;
@@ -807,25 +938,41 @@ define("tinymce/pasteplugin/WordFilter", [
 					[/<span\s+style\s*=\s*"\s*mso-spacerun\s*:\s*yes\s*;?\s*"\s*>([\s\u00a0]*)<\/span>/gi,
 						function(str, spaces) {
 							return (spaces.length > 0) ?
-								spaces.replace(/./, " ").slice(Math.floor(spaces.length/2)).split("").join("\u00a0") : "";
+								spaces.replace(/./, " ").slice(Math.floor(spaces.length / 2)).split("").join("\u00a0") : "";
 						}
 					]
 				]);
 
 				var validElements = settings.paste_word_valid_elements;
 				if (!validElements) {
-					validElements = '@[style],-strong/b,-em/i,-span,-p,-ol,-ul,-li,-h1,-h2,-h3,-h4,-h5,-h6,' +
-						'-table,-tr,-td[colspan|rowspan],-th,-thead,-tfoot,-tbody,-a[href|name],sub,sup,strike,br';
+					validElements = '-strong/b,-em/i,-span,-p,-ol,-ul,-li,-h1,-h2,-h3,-h4,-h5,-h6,-p/div,' +
+						'-table[width],-tr,-td[colspan|rowspan|width],-th,-thead,-tfoot,-tbody,-a[href|name],sub,sup,strike,br,del';
 				}
 
 				// Setup strict schema
 				var schema = new Schema({
-					valid_elements: validElements
+					valid_elements: validElements,
+					valid_children: '-li[p]'
+				});
+
+				// Add style/class attribute to all element rules since the user might have removed them from
+				// paste_word_valid_elements config option and we need to check them for properties
+				Tools.each(schema.elements, function(rule) {
+					if (!rule.attributes["class"]) {
+						rule.attributes["class"] = {};
+						rule.attributesOrder.push("class");
+					}
+
+					if (!rule.attributes.style) {
+						rule.attributes.style = {};
+						rule.attributesOrder.push("style");
+					}
 				});
 
 				// Parse HTML into DOM structure
 				var domParser = new DomParser({}, schema);
 
+				// Filter styles to remove "mso" specific styles and convert some of them
 				domParser.addAttributeFilter('style', function(nodes) {
 					var i = nodes.length, node;
 
@@ -834,12 +981,38 @@ define("tinymce/pasteplugin/WordFilter", [
 						node.attr('style', filterStyles(node, node.attr('style')));
 
 						// Remove pointess spans
-						if (node.name == 'span' && !node.attributes.length) {
+						if (node.name == 'span' && node.parent && !node.attributes.length) {
 							node.unwrap();
 						}
 					}
 				});
 
+				// Check the class attribute for comments or del items and remove those
+				domParser.addAttributeFilter('class', function(nodes) {
+					var i = nodes.length, node, className;
+
+					while (i--) {
+						node = nodes[i];
+
+						className = node.attr('class');
+						if (/^(MsoCommentReference|MsoCommentText|msoDel)$/i.test(className)) {
+							node.remove();
+						}
+
+						node.attr('class', null);
+					}
+				});
+
+				// Remove all del elements since we don't want the track changes code in the editor
+				domParser.addNodeFilter('del', function(nodes) {
+					var i = nodes.length;
+
+					while (i--) {
+						nodes[i].remove();
+					}
+				});
+
+				// Keep some of the links and anchors
 				domParser.addNodeFilter('a', function(nodes) {
 					var i = nodes.length, node, href, name;
 
@@ -847,6 +1020,11 @@ define("tinymce/pasteplugin/WordFilter", [
 						node = nodes[i];
 						href = node.attr('href');
 						name = node.attr('name');
+
+						if (href && href.indexOf('#_msocom_') != -1) {
+							node.remove();
+							continue;
+						}
 
 						if (href && href.indexOf('file://') === 0) {
 							href = href.split('#')[1];
@@ -858,6 +1036,12 @@ define("tinymce/pasteplugin/WordFilter", [
 						if (!href && !name) {
 							node.unwrap();
 						} else {
+							// Remove all named anchors that isn't toc specific
+							if (name && !/^_?toc/i.test(name)) {
+								node.unwrap();
+								continue;
+							}
+
 							node.attr({
 								href: href,
 								name: name
@@ -865,6 +1049,7 @@ define("tinymce/pasteplugin/WordFilter", [
 						}
 					}
 				});
+
 				// Parse into DOM structure
 				var rootNode = domParser.parse(content);
 
@@ -928,9 +1113,10 @@ define("tinymce/pasteplugin/Quirks", [
 		 */
 		function removeWebKitFragments(html) {
 			html = Utils.filter(html, [
-				/^[\s\S]*<!--StartFragment-->|<!--EndFragment-->[\s\S]*$/g,        // WebKit fragment
+				/^[\s\S]*<body[^>]*>\s*<!--StartFragment-->|<!--EndFragment-->\s*<\/body[^>]*>[\s\S]*$/g, // WebKit fragment body
+				/<!--StartFragment-->|<!--EndFragment-->/g, // Inner fragments (tables from excel on mac)
 				[/<span class="Apple-converted-space">\u00a0<\/span>/g, '\u00a0'], // WebKit &nbsp;
-				/<br>$/															   // Traling BR elements
+				/<br>$/i // Traling BR elements
 			]);
 
 			return html;
@@ -980,17 +1166,55 @@ define("tinymce/pasteplugin/Quirks", [
 		}
 
 		/**
-		 * WebKit has a nasty bug where the all runtime styles gets added to style attributes when copy/pasting contents.
+		 * WebKit has a nasty bug where the all computed styles gets added to style attributes when copy/pasting contents.
 		 * This fix solves that by simply removing the whole style attribute.
 		 *
-		 * Todo: This can be made smarter. Keeping styles that override existing ones etc.
+		 * The paste_webkit_styles option can be set to specify what to keep:
+		 *  paste_webkit_styles: "none" // Keep no styles
+		 *  paste_webkit_styles: "all", // Keep all of them
+		 *  paste_webkit_styles: "font-weight color" // Keep specific ones
 		 *
 		 * @param {String} content Content that needs to be processed.
 		 * @return {String} Processed contents.
 		 */
 		function removeWebKitStyles(content) {
-			if (editor.settings.paste_remove_styles || editor.settings.paste_remove_styles_if_webkit !== false) {
-				content = content.replace(/ style=\"[^\"]+\"/g, '');
+			// Passthrough all styles from Word and let the WordFilter handle that junk
+			if (WordFilter.isWordContent(content)) {
+				return content;
+			}
+
+			// Filter away styles that isn't matching the target node
+
+			var webKitStyles = editor.getParam("paste_webkit_styles", "color font-size font-family background-color").split(/[, ]/);
+
+			if (editor.settings.paste_remove_styles_if_webkit === false) {
+				webKitStyles = "all";
+			}
+
+			// Keep specific styles that doesn't match the current node computed style
+			if (webKitStyles != "all") {
+				var dom = editor.dom, node = editor.selection.getNode();
+
+				content = content.replace(/ style=\"([^\"]+)\"/gi, function(a, value) {
+					var inputStyles = dom.parseStyle(value, 'span'), outputStyles = {};
+
+					if (webKitStyles === "none") {
+						return '';
+					}
+
+					for (var i = 0; i < webKitStyles.length; i++) {
+						if (dom.toHex(dom.getStyle(node, webKitStyles[i], true)) != inputStyles[webKitStyles[i]]) {
+							outputStyles[webKitStyles[i]] = inputStyles[webKitStyles[i]];
+						}
+					}
+
+					outputStyles = dom.serializeStyle(outputStyles, 'span');
+					if (outputStyles) {
+						return ' style="' + outputStyles + '"';
+					}
+
+					return '';
+				});
 			}
 
 			return content;

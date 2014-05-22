@@ -24,7 +24,7 @@ get_current_screen()->add_help_tab( array(
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
 	'<p>' . __('<a href="http://codex.wordpress.org/Settings_Discussion_Screen" target="_blank">Documentation on Discussion Settings</a>') . '</p>' .
-	'<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+	'<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
 
 include( ABSPATH . 'wp-admin/admin-header.php' );
@@ -80,7 +80,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' );
  *
  * @since 2.7.0.
  *
- * @param int $10 The maximum depth of threaded comments. Default 10.
+ * @param int $max_depth The maximum depth of threaded comments. Default 10.
  */
 $maxdeep = (int) apply_filters( 'thread_comments_depth_max', 10 );
 

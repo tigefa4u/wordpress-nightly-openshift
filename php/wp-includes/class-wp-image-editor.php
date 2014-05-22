@@ -82,13 +82,17 @@ abstract class WP_Image_Editor {
 	/**
 	 * Resizes current image.
 	 *
+	 * At minimum, either a height or width must be provided.
+	 * If one of the two is set to null, the resize will
+	 * maintain aspect ratio according to the provided dimension.
+	 *
 	 * @since 3.5.0
 	 * @access public
 	 * @abstract
 	 *
-	 * @param int $max_w
-	 * @param int $max_h
-	 * @param boolean $crop
+	 * @param  int|null $max_w Image width.
+	 * @param  int|null $max_h Image height.
+	 * @param  boolean  $crop
 	 * @return boolean|WP_Error
 	 */
 	abstract public function resize( $max_w, $max_h, $crop = false );
@@ -266,8 +270,7 @@ abstract class WP_Image_Editor {
 	 * @return array { filename|null, extension, mime-type }
 	 */
 	protected function get_output_format( $filename = null, $mime_type = null ) {
-		$new_ext = $file_ext = null;
-		$file_mime = null;
+		$new_ext = null;
 
 		// By default, assume specified type takes priority
 		if ( $mime_type ) {

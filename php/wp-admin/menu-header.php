@@ -77,7 +77,8 @@ function _wp_menu_output( $menu, $submenu, $submenu_as_parent = true ) {
 
 		$class = $class ? ' class="' . join( ' ', $class ) . '"' : '';
 		$id = ! empty( $item[5] ) ? ' id="' . preg_replace( '|[^a-zA-Z0-9_:.]|', '-', $item[5] ) . '"' : '';
-		$img = $img_style = $img_class = '';
+		$img = $img_style = '';
+		$img_class = ' dashicons-before';
 
 		// if the string 'none' (previously 'div') is passed instead of an URL, don't output the default menu image
 		// so an icon can be added to div.wp-menu-image as background with CSS.
@@ -93,7 +94,7 @@ function _wp_menu_output( $menu, $submenu, $submenu_as_parent = true ) {
 				$img_class = ' svg';
 			} elseif ( 0 === strpos( $item[6], 'dashicons-' ) ) {
 				$img = '<br />';
-				$img_class = ' dashicons ' . sanitize_html_class( $item[6] );
+				$img_class = ' dashicons-before ' . sanitize_html_class( $item[6] );
 			}
 		}
 		$arrow = '<div class="wp-menu-arrow"><div></div></div>';

@@ -40,7 +40,7 @@ get_current_screen()->set_help_sidebar(
 	'<p>' . __('<a href="http://codex.wordpress.org/Using_Themes" target="_blank">Documentation on Using Themes</a>') . '</p>' .
 	'<p>' . __('<a href="http://codex.wordpress.org/Editing_Files" target="_blank">Documentation on Editing Files</a>') . '</p>' .
 	'<p>' . __('<a href="http://codex.wordpress.org/Template_Tags" target="_blank">Documentation on Template Tags</a>') . '</p>' .
-	'<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+	'<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
 
 wp_reset_vars( array( 'action', 'error', 'file', 'theme' ) );
@@ -92,7 +92,6 @@ case 'update':
 	}
 	wp_redirect( $location );
 	exit;
-break;
 
 default:
 
@@ -122,8 +121,7 @@ default:
 		$content = esc_textarea( $content );
 	}
 
-	?>
-<?php if ( isset( $_GET['updated'] ) ) : ?>
+	if ( isset( $_GET['updated'] ) ) : ?>
  <div id="message" class="updated"><p><?php _e( 'File edited successfully.' ) ?></p></div>
 <?php endif;
 

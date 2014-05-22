@@ -170,7 +170,7 @@ function wp_install_defaults( $user_id ) {
 
 	// Default comment
 	$first_comment_author = __('Mr WordPress');
-	$first_comment_url = 'http://wordpress.org/';
+	$first_comment_url = 'https://wordpress.org/';
 	$first_comment = __('Hi, this is a comment.
 To delete a comment, just log in and view the post&#039;s comments. There you will have the option to edit or delete them.');
 	if ( is_multisite() ) {
@@ -282,7 +282,7 @@ Password: %3\$s
 We hope you enjoy your new site. Thanks!
 
 --The WordPress Team
-http://wordpress.org/
+https://wordpress.org/
 "), $blog_url, $name, $password);
 
 	@wp_mail($email, __('New WordPress Site'), $message);
@@ -332,8 +332,8 @@ function wp_upgrade() {
 	 *
 	 * @since 3.9.0
 	 *
-	 * @param int $new_db_version The new $wp_db_version.
-	 * @param int $old_db_version The old $wp_db_version.
+	 * @param int $wp_db_version         The new $wp_db_version.
+	 * @param int $wp_current_db_version The old (current) $wp_db_version.
 	 */
 	do_action( 'wp_upgrade', $wp_db_version, $wp_current_db_version );
 }
@@ -1385,7 +1385,7 @@ function maybe_create_table($table_name, $create_ddl) {
 	if ( $wpdb->get_var("SHOW TABLES LIKE '$table_name'") == $table_name )
 		return true;
 	//didn't find it try to create it.
-	$q = $wpdb->query($create_ddl);
+	$wpdb->query($create_ddl);
 	// we cannot directly tell that whether this succeeded!
 	if ( $wpdb->get_var("SHOW TABLES LIKE '$table_name'") == $table_name )
 		return true;
@@ -1447,7 +1447,7 @@ function maybe_add_column($table_name, $column_name, $create_ddl) {
 		}
 	}
 	//didn't find it try to create it.
-	$q = $wpdb->query($create_ddl);
+	$wpdb->query($create_ddl);
 	// we cannot directly tell that whether this succeeded!
 	foreach ($wpdb->get_col("DESC $table_name", 0) as $column ) {
 		if ($column == $column_name) {
@@ -1555,6 +1555,14 @@ function dbDelta( $queries = '', $execute = true ) {
 		$queries = explode( ';', $queries );
 		$queries = array_filter( $queries );
 	}
+
+	/**
+	 * Filter the dbDelta SQL queries.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param array $queries An array of dbDelta SQL queries.
+	 */
 	$queries = apply_filters( 'dbdelta_queries', $queries );
 
 	$cqueries = array(); // Creation Queries
@@ -1576,7 +1584,27 @@ function dbDelta( $queries = '', $execute = true ) {
 			// Unrecognized query type
 		}
 	}
+
+	/**
+	 * Filter the dbDelta SQL queries for creating tables and/or databases.
+	 *
+	 * Queries filterable via this hook contain "CREATE TABLE" or "CREATE DATABASE".
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param array $cqueries An array of dbDelta create SQL queries.
+	 */
 	$cqueries = apply_filters( 'dbdelta_create_queries', $cqueries );
+
+	/**
+	 * Filter the dbDelta SQL queries for inserting or updating.
+	 *
+	 * Queries filterable via this hook contain "INSERT INTO" or "UPDATE".
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param array $iqueries An array of dbDelta insert or update SQL queries.
+	 */
 	$iqueries = apply_filters( 'dbdelta_insert_queries', $iqueries );
 
 	$global_tables = $wpdb->tables( 'global' );
@@ -1766,7 +1794,7 @@ function make_db_current( $tables = 'all' ) {
  * @since 1.5.0
  */
 function make_db_current_silent( $tables = 'all' ) {
-	$alterations = dbDelta( $tables );
+	dbDelta( $tables );
 }
 
 /**

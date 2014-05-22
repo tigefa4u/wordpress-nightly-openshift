@@ -542,7 +542,10 @@ function activate_plugin( $plugin, $redirect = '', $network_wide = false, $silen
 
 		if ( ! $silent ) {
 			/**
-			 * Fires before a plugin is activated in activate_plugin() when the $silent parameter is false.
+			 * Fires before a plugin is activated.
+			 *
+			 * If a plugin is silently activated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.9.0
 			 *
@@ -553,10 +556,14 @@ function activate_plugin( $plugin, $redirect = '', $network_wide = false, $silen
 			do_action( 'activate_plugin', $plugin, $network_wide );
 
 			/**
-			 * Fires before a plugin is activated in activate_plugin() when the $silent parameter is false.
+			 * Fires as a specific plugin is being deactivated.
 			 *
-			 * The action concatenates the 'activate_' prefix with the $plugin value passed to
-			 * activate_plugin() to create a dynamically-named action.
+			 * This hook is the "deactivation" hook used internally by
+			 * register_deactivation_hook(). The dynamic portion of the
+			 * hook name, $plugin. refers to the plugin basename.
+			 *
+			 * If a plugin is silently activated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.0.0
 			 *
@@ -577,7 +584,10 @@ function activate_plugin( $plugin, $redirect = '', $network_wide = false, $silen
 
 		if ( ! $silent ) {
 			/**
-			 * Fires after a plugin has been activated in activate_plugin() when the $silent parameter is false.
+			 * Fires after a plugin has been activated.
+			 *
+			 * If a plugin is silently activated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.9.0
 			 *
@@ -626,8 +636,10 @@ function deactivate_plugins( $plugins, $silent = false, $network_wide = null ) {
 
 		if ( ! $silent ) {
 			/**
-			 * Fires for each plugin being deactivated in deactivate_plugins(), before deactivation
-			 * and when the $silent parameter is false.
+			 * Fires before a plugin is deactivated.
+			 *
+			 * If a plugin is silently deactivated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.9.0
 			 *
@@ -657,11 +669,14 @@ function deactivate_plugins( $plugins, $silent = false, $network_wide = null ) {
 
 		if ( ! $silent ) {
 			/**
-			 * Fires for each plugin being deactivated in deactivate_plugins(), after deactivation
-			 * and when the $silent parameter is false.
+			 * Fires as a specific plugin is being deactivated.
 			 *
-			 * The action concatenates the 'deactivate_' prefix with the plugin's basename
-			 * to create a dynamically-named action.
+			 * This hook is the "deactivation" hook used internally by
+			 * register_deactivation_hook(). The dynamic portion of the
+			 * hook name, $plugin. refers to the plugin basename.
+			 *
+			 * If a plugin is silently deactivated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.0.0
 			 *
@@ -671,14 +686,16 @@ function deactivate_plugins( $plugins, $silent = false, $network_wide = null ) {
 			do_action( 'deactivate_' . $plugin, $network_deactivating );
 
 			/**
-			 * Fires for each plugin being deactivated in deactivate_plugins(), after deactivation
-			 * and when the $silent parameter is false.
+			 * Fires after a plugin is deactivated.
+			 *
+			 * If a plugin is silently deactivated (such as during an update),
+			 * this hook does not fire.
 			 *
 			 * @since 2.9.0
 			 *
-			 * @param string $plugin               Plugin path to main plugin file with plugin data.
+			 * @param string $plugin               Plugin basename.
 			 * @param bool   $network_deactivating Whether the plugin is deactivated for all sites in the network
-			 *                                     or just the current site. Multisite only. Default is false.
+			 *                                     or just the current site. Multisite only. Default false.
 			 */
 			do_action( 'deactivated_plugin', $plugin, $network_deactivating );
 		}
@@ -700,7 +717,7 @@ function deactivate_plugins( $plugins, $silent = false, $network_wide = null ) {
  *
  * @since 2.6.0
  *
- * @param string|array $plugins
+ * @param string|array $plugins Single plugin or list of plugins to activate.
  * @param string $redirect Redirect to page after successful activation.
  * @param bool $network_wide Whether to enable the plugin for all sites in the network.
  * @param bool $silent Prevent calling activation hooks. Default is false.
@@ -726,18 +743,16 @@ function activate_plugins( $plugins, $redirect = '', $network_wide = false, $sil
 }
 
 /**
- * Remove directory and files of a plugin for a single or list of plugin(s).
- *
- * If the plugins parameter list is empty, false will be returned. True when
- * completed.
+ * Remove directory and files of a plugin for a list of plugins.
  *
  * @since 2.6.0
  *
- * @param array $plugins List of plugin
- * @param string $redirect Redirect to page when complete.
- * @return mixed
+ * @param array  $plugins    List of plugins to delete.
+ * @param string $deprecated Deprecated.
+ * @return bool|null|WP_Error True on success, false is $plugins is empty, WP_Error on failure.
+ *                            Null if filesystem credentials are required to proceed.
  */
-function delete_plugins($plugins, $redirect = '' ) {
+function delete_plugins( $plugins, $deprecated = '' ) {
 	global $wp_filesystem;
 
 	if ( empty($plugins) )
@@ -923,7 +938,7 @@ function uninstall_plugin($plugin) {
 
 		define('WP_UNINSTALL_PLUGIN', $file);
 		wp_register_plugin_realpath( WP_PLUGIN_DIR . '/' . dirname( $file ) );
-		include WP_PLUGIN_DIR . '/' . dirname($file) . '/uninstall.php';
+		include( WP_PLUGIN_DIR . '/' . dirname($file) . '/uninstall.php' );
 
 		return true;
 	}
@@ -935,7 +950,7 @@ function uninstall_plugin($plugin) {
 		unset($uninstallable_plugins);
 
 		wp_register_plugin_realpath( WP_PLUGIN_DIR . '/' . $file );
-		include WP_PLUGIN_DIR . '/' . $file;
+		include( WP_PLUGIN_DIR . '/' . $file );
 
 		add_action( 'uninstall_' . $file, $callable );
 
@@ -991,7 +1006,7 @@ function add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $func
 		add_action( $hookname, $function );
 
 	if ( empty($icon_url) ) {
-		$icon_url = 'none';
+		$icon_url = 'dashicons-admin-generic';
 		$icon_class = 'menu-icon-generic ';
 	} else {
 		$icon_url = set_url_scheme( $icon_url );

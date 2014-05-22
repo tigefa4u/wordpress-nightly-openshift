@@ -32,9 +32,15 @@ window.wp = window.wp || {};
 			frame = new MediaFrame.Post( attributes );
 		} else if ( 'image' === attributes.frame && MediaFrame.ImageDetails ) {
 			frame = new MediaFrame.ImageDetails( attributes );
+		} else if ( 'audio' === attributes.frame && MediaFrame.AudioDetails ) {
+			frame = new MediaFrame.AudioDetails( attributes );
+		} else if ( 'video' === attributes.frame && MediaFrame.VideoDetails ) {
+			frame = new MediaFrame.VideoDetails( attributes );
 		}
 
 		delete attributes.frame;
+
+		media.frame = frame;
 
 		return frame;
 	};
@@ -354,7 +360,12 @@ window.wp = window.wp || {};
 
 			if ( attributes.attachment_id ) {
 				this.attachment = Attachment.get( attributes.attachment_id );
-				this.dfd = this.attachment.fetch();
+				if ( this.attachment.get( 'url' ) ) {
+					this.dfd = $.Deferred();
+					this.dfd.resolve();
+				} else {
+					this.dfd = this.attachment.fetch();
+				}
 				this.bindAttachmentListeners();
 			}
 
@@ -363,10 +374,15 @@ window.wp = window.wp || {};
 			this.on( 'change:size', this.updateSize, this );
 
 			this.setLinkTypeFromUrl();
+			this.setAspectRatio();
+
+			this.set( 'originalUrl', attributes.url );
 		},
 
 		bindAttachmentListeners: function() {
 			this.listenTo( this.attachment, 'sync', this.setLinkTypeFromUrl );
+			this.listenTo( this.attachment, 'sync', this.setAspectRatio );
+			this.listenTo( this.attachment, 'change', this.updateSize );
 		},
 
 		changeAttachment: function( attachment, props ) {
@@ -440,10 +456,37 @@ window.wp = window.wp || {};
 				return;
 			}
 
+			if ( this.get( 'size' ) === 'custom' ) {
+				this.set( 'width', this.get( 'customWidth' ) );
+				this.set( 'height', this.get( 'customHeight' ) );
+				this.set( 'url', this.get( 'originalUrl' ) );
+				return;
+			}
+
 			size = this.attachment.get( 'sizes' )[ this.get( 'size' ) ];
+
+			if ( ! size ) {
+				return;
+			}
+
 			this.set( 'url', size.url );
 			this.set( 'width', size.width );
 			this.set( 'height', size.height );
+		},
+
+		setAspectRatio: function() {
+			var full;
+
+			if ( this.attachment && this.attachment.get( 'sizes' ) ) {
+				full = this.attachment.get( 'sizes' ).full;
+
+				if ( full ) {
+					this.set( 'aspectRatio', full.width / full.height );
+					return;
+				}
+			}
+
+			this.set( 'aspectRatio', this.get( 'customWidth' ) / this.get( 'customHeight' ) );
 		}
 	});
 

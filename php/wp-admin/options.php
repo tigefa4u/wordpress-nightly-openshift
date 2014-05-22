@@ -108,11 +108,11 @@ if ( !is_multisite() ) {
 	$whitelist_options['general'][] = 'WPLANG';
 
 	/**
-	 * Toggle post-by-email functionality.
+	 * Filter whether the post-by-email functionality is enabled.
 	 *
 	 * @since 3.0.0
 	 *
-	 * @param bool True or false, based on whether post-by-email configuration is enabled or not.
+	 * @param bool $enabled Whether post-by-email configuration is enabled. Default true.
 	 */
 	if ( apply_filters( 'enable_post_by_email_configuration', true ) )
 		$whitelist_options['writing'] = array_merge($whitelist_options['writing'], $mail_options);
@@ -204,7 +204,7 @@ include( ABSPATH . 'wp-admin/admin-header.php' ); ?>
   <form name="form" action="options.php" method="post" id="all-options">
   <?php wp_nonce_field('options-options') ?>
   <input type="hidden" name="action" value="update" />
-  <input type='hidden' name='option_page' value='options' />
+  <input type="hidden" name="option_page" value="options" />
   <table class="form-table">
 <?php
 $options = $wpdb->get_results( "SELECT * FROM $wpdb->options ORDER BY option_name" );
@@ -230,18 +230,19 @@ foreach ( (array) $options as $option ) :
 		$class = 'all-options';
 	}
 	$name = esc_attr( $option->option_name );
-	echo "
+	?>
 <tr>
-	<th scope='row'><label for='$name'>" . esc_html( $option->option_name ) . "</label></th>
-<td>";
-	if ( strpos( $value, "\n" ) !== false )
-		echo "<textarea class='$class' name='$name' id='$name' cols='30' rows='5'>" . esc_textarea( $value ) . "</textarea>";
-	else
-		echo "<input class='regular-text $class' type='text' name='$name' id='$name' value='" . esc_attr( $value ) . "'" . disabled( $disabled, true, false ) . " />";
-	echo "</td>
-</tr>";
-endforeach;
-?>
+	<th scope="row"><label for="<?php echo $name ?>"><?php echo esc_html( $option->option_name ); ?></label></th>
+<td>
+<?php if ( strpos( $value, "\n" ) !== false ) : ?>
+	<textarea class="<?php echo $class ?>" name="<?php echo $name ?>" id="<?php echo $name ?>" cols="30" rows="5"><?php
+		echo esc_textarea( $value );
+	?></textarea>
+	<?php else: ?>
+		<input class="regular-text <?php echo $class ?>" type="text" name="<?php echo $name ?>" id="<?php echo $name ?>" value="<?php echo esc_attr( $value ) ?>"<?php disabled( $disabled, true ) ?> />
+	<?php endif ?></td>
+</tr>
+<?php endforeach; ?>
   </table>
 
 <input type="hidden" name="page_options" value="<?php echo esc_attr( implode( ',', $options_to_update ) ); ?>" />

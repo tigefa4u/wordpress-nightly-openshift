@@ -276,7 +276,7 @@ function remove_user_from_blog($user_id, $blog_id = '', $reassign = '') {
 	if ( $reassign != '' ) {
 		$reassign = (int) $reassign;
 		$post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_author = %d", $user_id ) );
-		$link_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->links WHERE link_owner = %d", $user_id ) );
+		$link_ids = $wpdb->get_col( $wpdb->prepare( "SELECT link_id FROM $wpdb->links WHERE link_owner = %d", $user_id ) );
 
 		if ( ! empty( $post_ids ) ) {
 			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_author = %d WHERE post_author = %d", $reassign, $user_id ) );
@@ -880,7 +880,7 @@ function wpmu_signup_blog_notification( $domain, $path, $title, $user, $user_ema
 		$from_name,
 		esc_url( 'http://' . $domain . $path )
 	);
-	wp_mail($user_email, $subject, $message, $message_headers);
+	wp_mail( $user_email, wp_specialchars_decode( $subject ), $message, $message_headers );
 	return true;
 }
 
@@ -965,7 +965,7 @@ function wpmu_signup_user_notification( $user, $user_email, $key, $meta = array(
 		$from_name,
 		$user
 	);
-	wp_mail($user_email, $subject, $message, $message_headers);
+	wp_mail( $user_email, wp_specialchars_decode( $subject ), $message, $message_headers );
 	return true;
 }
 
@@ -1299,7 +1299,9 @@ Disable these notifications: %3$s'), $user->user_login, wp_unslash( $_SERVER['RE
  */
 function domain_exists($domain, $path, $site_id = 1) {
 	global $wpdb;
+	$path = trailingslashit( $path );
 	$result = $wpdb->get_var( $wpdb->prepare("SELECT blog_id FROM $wpdb->blogs WHERE domain = %s AND path = %s AND site_id = %d", $domain, $path, $site_id) );
+
 	/**
 	 * Filter whether a blogname is taken.
 	 *
@@ -1519,7 +1521,7 @@ We hope you enjoy your new site. Thanks!
 	 * @param string $subject Subject of the email.
 	 */
 	$subject = apply_filters( 'update_welcome_subject', sprintf( __( 'New %1$s Site: %2$s' ), $current_site->site_name, wp_unslash( $title ) ) );
-	wp_mail($user->user_email, $subject, $message, $message_headers);
+	wp_mail( $user->user_email, wp_specialchars_decode( $subject ), $message, $message_headers );
 	return true;
 }
 
@@ -1597,7 +1599,7 @@ function wpmu_welcome_user_notification( $user_id, $password, $meta = array() ) 
 	 * @param string $subject Subject of the email.
 	 */
 	$subject = apply_filters( 'update_welcome_user_subject', sprintf( __( 'New %1$s User: %2$s' ), $current_site->site_name, $user->user_login) );
-	wp_mail($user->user_email, $subject, $message, $message_headers);
+	wp_mail( $user->user_email, wp_specialchars_decode( $subject ), $message, $message_headers );
 	return true;
 }
 
@@ -2076,11 +2078,9 @@ function is_user_option_local( $key, $user_id = 0, $blog_id = 0 ) {
 	global $wpdb;
 
 	$current_user = wp_get_current_user();
-	if ( $user_id == 0 )
-		$user_id = $current_user->ID;
-	if ( $blog_id == 0 )
+	if ( $blog_id == 0 ) {
 		$blog_id = $wpdb->blogid;
-
+	}
 	$local_key = $wpdb->get_blog_prefix( $blog_id ) . $key;
 
 	if ( isset( $current_user->$local_key ) )

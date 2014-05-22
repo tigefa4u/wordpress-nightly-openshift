@@ -51,7 +51,7 @@ get_current_screen()->add_help_tab( array(
 get_current_screen()->set_help_sidebar(
     '<p><strong>' . __('For more information:') . '</strong></p>' .
     '<p>' . __('<a href="http://codex.wordpress.org/Users_Your_Profile_Screen" target="_blank">Documentation on User Profiles</a>') . '</p>' .
-    '<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+    '<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
 
 $wp_http_referer = remove_query_arg(array('update', 'delete_count'), $wp_http_referer );
@@ -187,7 +187,7 @@ $profileuser = get_user_to_edit($user_id);
 if ( !current_user_can('edit_user', $user_id) )
 	wp_die(__('You do not have permission to edit this user.'));
 
-include (ABSPATH . 'wp-admin/admin-header.php');
+include(ABSPATH . 'wp-admin/admin-header.php');
 ?>
 
 <?php if ( !IS_PROFILE_PAGE && is_super_admin( $profileuser->ID ) && current_user_can( 'manage_network_options' ) ) { ?>
@@ -401,7 +401,7 @@ if ( is_multisite() && is_network_admin() && ! IS_PROFILE_PAGE && current_user_c
 <table class="form-table">
 <tr>
 	<th><label for="email"><?php _e('E-mail'); ?> <span class="description"><?php _e('(required)'); ?></span></label></th>
-	<td><input type="text" name="email" id="email" value="<?php echo esc_attr($profileuser->user_email) ?>" class="regular-text" />
+	<td><input type="text" name="email" id="email" value="<?php echo esc_attr($profileuser->user_email) ?>" class="regular-text ltr" />
 	<?php
 	$new_email = get_option( $current_user->ID . '_new_email' );
 	if ( $new_email && $new_email['newemail'] != $current_user->user_email && $profileuser->ID == $current_user->ID ) : ?>
@@ -470,7 +470,7 @@ if ( $show_password_fields ) :
 	<span class="description" for="pass2"><?php _e( 'Type your new password again.' ); ?></span>
 	<br />
 	<div id="pass-strength-result"><?php _e( 'Strength indicator' ); ?></div>
-	<p class="description indicator-hint"><?php _e( 'Hint: The password should be at least seven characters long. To make it stronger, use upper and lower case letters, numbers and symbols like ! " ? $ % ^ &amp; ).' ); ?></p>
+	<p class="description indicator-hint"><?php _e( 'Hint: The password should be at least seven characters long. To make it stronger, use upper and lower case letters, numbers, and symbols like ! " ? $ % ^ &amp; ).' ); ?></p>
 	</td>
 </tr>
 <?php endif; ?>

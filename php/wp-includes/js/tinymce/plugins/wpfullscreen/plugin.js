@@ -63,20 +63,33 @@ tinymce.PluginManager.add( 'wpfullscreen', function( editor ) {
 	editor.addCommand( 'wpFullScreenOn', fullscreenOn );
 	editor.addCommand( 'wpFullScreenOff', fullscreenOff );
 
-	function toggleFullscreen() {
-		// Toggle DFW mode. For use from inside the editor.
-		if ( typeof wp === 'undefined' || ! wp.editor || ! wp.editor.fullscreen ) {
-			return;
-		}
+	function getExtAPI() {
+		return ( typeof wp !== 'undefined' && wp.editor && wp.editor.fullscreen );
+	}
 
-		if ( editor.getParam('wp_fullscreen') ) {
-			wp.editor.fullscreen.off();
-		} else {
-			wp.editor.fullscreen.on();
+	// Toggle DFW mode. For use from inside the editor.
+	function toggleFullscreen() {
+		var fullscreen = getExtAPI();
+
+		if ( fullscreen ) {
+			if ( editor.getParam('wp_fullscreen') ) {
+				fullscreen.off();
+			} else {
+				fullscreen.on();
+			}
 		}
 	}
 
 	editor.addCommand( 'wpFullScreen', toggleFullscreen );
+
+	editor.on( 'keydown', function( event ) {
+		var fullscreen;
+
+		// Turn fullscreen off when Esc is pressed.
+		if ( event.keyCode === 27 && ( fullscreen = getExtAPI() ) && fullscreen.settings.visible ) {
+			fullscreen.off();
+		}
+	});
 
 	editor.on( 'init', function() {
 		// Set the editor when initializing from whitin DFW
@@ -91,11 +104,13 @@ tinymce.PluginManager.add( 'wpfullscreen', function( editor ) {
 	editor.addButton( 'wp_fullscreen', {
 		tooltip: 'Distraction Free Writing',
 		shortcut: 'Alt+Shift+W',
-		onclick: toggleFullscreen
+		onclick: toggleFullscreen,
+		classes: 'wp-fullscreen btn widget' // This overwrites all classes on the container!
 	});
 
 	editor.addMenuItem( 'wp_fullscreen', {
 		text: 'Distraction Free Writing',
+		icon: 'wp_fullscreen',
 		shortcut: 'Alt+Shift+W',
 		context: 'view',
 		onclick: toggleFullscreen

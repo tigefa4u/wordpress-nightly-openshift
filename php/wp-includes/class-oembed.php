@@ -18,21 +18,21 @@
  * @since 2.9.0
  */
 class WP_oEmbed {
-	var $providers = array();
+	public $providers = array();
 
 	/**
 	 * Constructor
 	 *
 	 * @uses apply_filters() Filters a list of pre-defined oEmbed providers.
 	 */
-	function __construct() {
+	public function __construct() {
 		$providers = array(
-			'#http://(www\.)?youtube\.com/watch.*#i'              => array( 'http://www.youtube.com/oembed',                      true  ),
-			'#https://(www\.)?youtube\.com/watch.*#i'             => array( 'http://www.youtube.com/oembed?scheme=https',         true  ),
+			'#http://(www\.)?youtube\.com/(watch|playlist).*#i'   => array( 'http://www.youtube.com/oembed',                      true  ),
+			'#https://(www\.)?youtube\.com/(watch|playlist).*#i'  => array( 'http://www.youtube.com/oembed?scheme=https',         true  ),
 			'#http://youtu\.be/.*#i'                              => array( 'http://www.youtube.com/oembed',                      true  ),
 			'#https://youtu\.be/.*#i'                             => array( 'http://www.youtube.com/oembed?scheme=https',         true  ),
 			'http://blip.tv/*'                                    => array( 'http://blip.tv/oembed/',                             false ),
-			'#https?://(www\.)?vimeo\.com/.*#i'                   => array( 'http://vimeo.com/api/oembed.{format}',               true  ),
+			'#https?://(.+\.)?vimeo\.com/.*#i'                    => array( 'http://vimeo.com/api/oembed.{format}',               true  ),
 			'#https?://(www\.)?dailymotion\.com/.*#i'             => array( 'http://www.dailymotion.com/services/oembed',         true  ),
 			'http://dai.ly/*'                                     => array( 'http://www.dailymotion.com/services/oembed',         false ),
 			'#https?://(www\.)?flickr\.com/.*#i'                  => array( 'http://www.flickr.com/services/oembed/',             true  ),
@@ -40,7 +40,6 @@ class WP_oEmbed {
 			'#https?://(.+\.)?smugmug\.com/.*#i'                  => array( 'http://api.smugmug.com/services/oembed/',            true  ),
 			'#https?://(www\.)?hulu\.com/watch/.*#i'              => array( 'http://www.hulu.com/api/oembed.{format}',            true  ),
 			'#https?://(www\.)?viddler\.com/.*#i'                 => array( 'http://lab.viddler.com/services/oembed/',            true  ),
-			'http://qik.com/*'                                    => array( 'http://qik.com/api/oembed.{format}',                 false ),
 			'http://revision3.com/*'                              => array( 'http://revision3.com/api/oembed/',                   false ),
 			'http://i*.photobucket.com/albums/*'                  => array( 'http://photobucket.com/oembed',                      false ),
 			'http://gi*.photobucket.com/groups/*'                 => array( 'http://photobucket.com/oembed',                      false ),
@@ -57,6 +56,7 @@ class WP_oEmbed {
 			'#https?://(open|play)\.spotify\.com/.*#i'            => array( 'https://embed.spotify.com/oembed/',                  true  ),
 			'#https?://(.+\.)?imgur\.com/.*#i'                    => array( 'http://api.imgur.com/oembed',                        true  ),
 			'#https?://(www\.)?meetu(\.ps|p\.com)/.*#i'           => array( 'http://api.meetup.com/oembed',                       true  ),
+			'#https?://(www\.)?issuu\.com/.+/docs/.+#i'           => array( 'http://issuu.com/oembed_wp',                         true  ),
 		);
 
 		/**
@@ -78,6 +78,18 @@ class WP_oEmbed {
 	}
 
 	/**
+	 * Make private/protected methods readable for backwards compatibility
+	 *
+	 * @since 4.0.0
+	 * @param string $name
+	 * @param array $arguments
+	 * @return mixed
+	 */
+	public function __call( $name, $arguments ) {
+		return call_user_func_array( array( $this, $name ), $arguments );
+	}
+
+	/**
 	 * The do-it-all function that takes a URL and attempts to return the HTML.
 	 *
 	 * @see WP_oEmbed::discover()
@@ -88,7 +100,7 @@ class WP_oEmbed {
 	 * @param array $args Optional arguments. Usually passed from a shortcode.
 	 * @return bool|string False on failure, otherwise the UNSANITIZED (and potentially unsafe) HTML that should be used to embed.
 	 */
-	function get_html( $url, $args = '' ) {
+	public function get_html( $url, $args = '' ) {
 		$provider = false;
 
 		if ( !isset($args['discover']) )
@@ -133,11 +145,12 @@ class WP_oEmbed {
 	 * @param string $url The URL that should be inspected for discovery <link> tags.
 	 * @return bool|string False on failure, otherwise the oEmbed provider URL.
 	 */
-	function discover( $url ) {
+	public function discover( $url ) {
 		$providers = array();
 
 		// Fetch URL content
-		if ( $html = wp_remote_retrieve_body( wp_safe_remote_get( $url ) ) ) {
+		$request = wp_safe_remote_get( $url );
+		if ( $html = wp_remote_retrieve_body( $request ) ) {
 
 			/**
 			 * Filter the link types that contain oEmbed provider URLs.
@@ -198,7 +211,7 @@ class WP_oEmbed {
 	 * @param array $args Optional arguments. Usually passed from a shortcode.
 	 * @return bool|object False on failure, otherwise the result in the form of an object.
 	 */
-	function fetch( $provider, $url, $args = '' ) {
+	public function fetch( $provider, $url, $args = '' ) {
 		$args = wp_parse_args( $args, wp_embed_defaults() );
 
 		$provider = add_query_arg( 'maxwidth', (int) $args['width'], $provider );
@@ -234,7 +247,7 @@ class WP_oEmbed {
 	 * @param string $format Format to use
 	 * @return bool|object False on failure, otherwise the result in the form of an object.
 	 */
-	function _fetch_with_format( $provider_url_with_args, $format ) {
+	private function _fetch_with_format( $provider_url_with_args, $format ) {
 		$provider_url_with_args = add_query_arg( 'format', $format, $provider_url_with_args );
 		$response = wp_safe_remote_get( $provider_url_with_args );
 		if ( 501 == wp_remote_retrieve_response_code( $response ) )
@@ -251,7 +264,7 @@ class WP_oEmbed {
 	 * @since 3.0.0
 	 * @access private
 	 */
-	function _parse_json( $response_body ) {
+	private function _parse_json( $response_body ) {
 		return ( ( $data = json_decode( trim( $response_body ) ) ) && is_object( $data ) ) ? $data : false;
 	}
 
@@ -261,7 +274,7 @@ class WP_oEmbed {
 	 * @since 3.0.0
 	 * @access private
 	 */
-	function _parse_xml( $response_body ) {
+	private function _parse_xml( $response_body ) {
 		if ( ! function_exists( 'libxml_disable_entity_loader' ) )
 			return false;
 
@@ -318,7 +331,7 @@ class WP_oEmbed {
 	 * @param string $url The URL to the content that is desired to be embedded.
 	 * @return bool|string False on error, otherwise the HTML needed to embed.
 	 */
-	function data2html( $data, $url ) {
+	public function data2html( $data, $url ) {
 		if ( ! is_object( $data ) || empty( $data->type ) )
 			return false;
 
@@ -373,7 +386,7 @@ class WP_oEmbed {
 	 * @param string $url The original URL passed to oEmbed.
 	 * @return string Possibly modified $html
 	 */
-	function _strip_newlines( $html, $data, $url ) {
+	private function _strip_newlines( $html, $data, $url ) {
 		if ( false !== strpos( $html, "\n" ) )
 			$html = str_replace( array( "\r\n", "\n" ), '', $html );
 

@@ -30,7 +30,7 @@ get_current_screen()->add_help_tab( array(
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
 	'<p>' . __('<a href="http://codex.wordpress.org/Network_Admin_Updates_Screen" target="_blank">Documentation on Upgrade Network</a>') . '</p>' .
-	'<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
+	'<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
 
 require_once( ABSPATH . 'wp-admin/admin-header.php' );
@@ -86,7 +86,7 @@ switch ( $action ) {
 		}
 		echo "</ul>";
 		?><p><?php _e( 'If your browser doesn&#8217;t start loading the next page automatically, click this link:' ); ?> <a class="button" href="upgrade.php?action=upgrade&amp;n=<?php echo ($n + 5) ?>"><?php _e("Next Sites"); ?></a></p>
-		<script type='text/javascript'>
+		<script type="text/javascript">
 		<!--
 		function nextpage() {
 			location.href = "upgrade.php?action=upgrade&n=<?php echo ($n + 5) ?>";

@@ -71,7 +71,7 @@ if ( !defined('ABSPATH') )
 
 <div id="postbox-container-1" class="postbox-container">
 <div id="submitdiv" class="stuffbox" >
-<h3><span class='hndle'><?php _e('Status') ?></span></h3>
+<h3><span class="hndle"><?php _e('Status') ?></span></h3>
 <div class="inside">
 <div class="submitbox" id="submitcomment">
 <div id="minor-publishing">
@@ -99,7 +99,7 @@ if ( !defined('ABSPATH') )
 
 <div class="misc-pub-section curtime misc-pub-curtime">
 <?php
-// translators: Publish box date format, see http://php.net/date
+/* translators: Publish box date format, see http://php.net/date */
 $datef = __( 'M j, Y @ G:i' );
 $stamp = __('Submitted on: <b>%1$s</b>');
 $date = date_i18n( $datef, strtotime( $comment->comment_date ) );

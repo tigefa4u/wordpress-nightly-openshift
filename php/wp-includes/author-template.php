@@ -206,7 +206,11 @@ function the_author_link() {
  * @return int The number of posts by the author.
  */
 function get_the_author_posts() {
-	return count_user_posts( get_post()->post_author );
+	$post = get_post();
+	if ( ! $post ) {
+		return 0;
+	}
+	return count_user_posts( $post->post_author );
 }
 
 /**
@@ -316,6 +320,8 @@ function get_author_posts_url($author_id, $author_nicename = '') {
  * or as a string.</li>
  * <li>html (bool) (true): Whether to list the items in html form or plaintext.
  * </li>
+ * <li>exclude (array): Array of user IDs to explicitly exclude.</li>
+ * <li>include (array): Array of user IDs to explicitly include.</li>
  * </ul>
  *
  * @link http://codex.wordpress.org/Template_Tags/wp_list_authors
@@ -323,7 +329,7 @@ function get_author_posts_url($author_id, $author_nicename = '') {
  * @param array $args The argument array.
  * @return null|string The output, if echo is set to false.
  */
-function wp_list_authors($args = '') {
+function wp_list_authors( $args = '' ) {
 	global $wpdb;
 
 	$defaults = array(
@@ -331,93 +337,94 @@ function wp_list_authors($args = '') {
 		'optioncount' => false, 'exclude_admin' => true,
 		'show_fullname' => false, 'hide_empty' => true,
 		'feed' => '', 'feed_image' => '', 'feed_type' => '', 'echo' => true,
-		'style' => 'list', 'html' => true
+		'style' => 'list', 'html' => true, 'exclude' => '', 'include' => ''
 	);
 
 	$args = wp_parse_args( $args, $defaults );
-	extract( $args, EXTR_SKIP );
 
 	$return = '';
 
-	$query_args = wp_array_slice_assoc( $args, array( 'orderby', 'order', 'number' ) );
+	$query_args = wp_array_slice_assoc( $args, array( 'orderby', 'order', 'number', 'exclude', 'include' ) );
 	$query_args['fields'] = 'ids';
 	$authors = get_users( $query_args );
 
 	$author_count = array();
-	foreach ( (array) $wpdb->get_results("SELECT DISTINCT post_author, COUNT(ID) AS count FROM $wpdb->posts WHERE post_type = 'post' AND " . get_private_posts_cap_sql( 'post' ) . " GROUP BY post_author") as $row )
+	foreach ( (array) $wpdb->get_results( "SELECT DISTINCT post_author, COUNT(ID) AS count FROM $wpdb->posts WHERE post_type = 'post' AND " . get_private_posts_cap_sql( 'post' ) . " GROUP BY post_author" ) as $row ) {
 		$author_count[$row->post_author] = $row->count;
-
+	}
 	foreach ( $authors as $author_id ) {
 		$author = get_userdata( $author_id );
 
-		if ( $exclude_admin && 'admin' == $author->display_name )
+		if ( $args['exclude_admin'] && 'admin' == $author->display_name ) {
 			continue;
+		}
 
 		$posts = isset( $author_count[$author->ID] ) ? $author_count[$author->ID] : 0;
 
-		if ( !$posts && $hide_empty )
+		if ( ! $posts && $args['hide_empty'] ) {
 			continue;
+		}
 
-		$link = '';
-
-		if ( $show_fullname && $author->first_name && $author->last_name )
+		if ( $args['show_fullname'] && $author->first_name && $author->last_name ) {
 			$name = "$author->first_name $author->last_name";
-		else
+		} else {
 			$name = $author->display_name;
+		}
 
-		if ( !$html ) {
+		if ( ! $args['html'] ) {
 			$return .= $name . ', ';
 
 			continue; // No need to go further to process HTML.
 		}
 
-		if ( 'list' == $style ) {
+		if ( 'list' == $args['style'] ) {
 			$return .= '<li>';
 		}
 
 		$link = '<a href="' . get_author_posts_url( $author->ID, $author->user_nicename ) . '" title="' . esc_attr( sprintf(__("Posts by %s"), $author->display_name) ) . '">' . $name . '</a>';
 
-		if ( !empty( $feed_image ) || !empty( $feed ) ) {
+		if ( ! empty( $args['feed_image'] ) || ! empty( $args['feed'] ) ) {
 			$link .= ' ';
-			if ( empty( $feed_image ) ) {
+			if ( empty( $args['feed_image'] ) ) {
 				$link .= '(';
 			}
 
-			$link .= '<a href="' . get_author_feed_link( $author->ID ) . '"';
+			$link .= '<a href="' . get_author_feed_link( $author->ID, $args['feed_type'] ) . '"';
 
-			$alt = $title = '';
-			if ( !empty( $feed ) ) {
-				$title = ' title="' . esc_attr( $feed ) . '"';
-				$alt = ' alt="' . esc_attr( $feed ) . '"';
-				$name = $feed;
-				$link .= $title;
+			$alt = '';
+			if ( ! empty( $args['feed'] ) ) {
+				$alt = ' alt="' . esc_attr( $args['feed'] ) . '"';
+				$name = $args['feed'];
 			}
 
 			$link .= '>';
 
-			if ( !empty( $feed_image ) )
-				$link .= '<img src="' . esc_url( $feed_image ) . '" style="border: none;"' . $alt . $title . ' />';
-			else
+			if ( ! empty( $args['feed_image'] ) ) {
+				$link .= '<img src="' . esc_url( $args['feed_image'] ) . '" style="border: none;"' . $alt . ' />';
+			} else {
 				$link .= $name;
+			}
 
 			$link .= '</a>';
 
-			if ( empty( $feed_image ) )
+			if ( empty( $args['feed_image'] ) ) {
 				$link .= ')';
+			}
 		}
 
-		if ( $optioncount )
+		if ( $args['optioncount'] ) {
 			$link .= ' ('. $posts . ')';
+		}
 
 		$return .= $link;
-		$return .= ( 'list' == $style ) ? '</li>' : ', ';
+		$return .= ( 'list' == $args['style'] ) ? '</li>' : ', ';
 	}
 
-	$return = rtrim($return, ', ');
+	$return = rtrim( $return, ', ' );
 
-	if ( !$echo )
+	if ( ! $args['echo'] ) {
 		return $return;
-
+	}
 	echo $return;
 }
 

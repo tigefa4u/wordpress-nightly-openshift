@@ -12,7 +12,7 @@
  * @since 2.5.0
  */
 function wp_list_widgets() {
-	global $wp_registered_widgets, $sidebars_widgets, $wp_registered_widget_controls;
+	global $wp_registered_widgets, $wp_registered_widget_controls;
 
 	$sort = $wp_registered_widgets;
 	usort( $sort, '_sort_name_callback' );
@@ -188,9 +188,6 @@ function wp_widget_control( $sidebar_args ) {
 	$widget_title = esc_html( strip_tags( $sidebar_args['widget_name'] ) );
 	$has_form = 'noform';
 
-	//temporary_hook #26661
-	do_action( 'temp_wp_widget_control_before', $sidebar_args );
-
 	echo $sidebar_args['before_widget']; ?>
 	<div class="widget-top">
 	<div class="widget-title-action">
@@ -240,9 +237,6 @@ function wp_widget_control( $sidebar_args ) {
 	</div>
 <?php
 	echo $sidebar_args['after_widget'];
-
-	//temporary_hook #26661
-	do_action( 'temp_wp_widget_control_after', $sidebar_args, 'noform' !== $has_form );
 
 	return $sidebar_args;
 }

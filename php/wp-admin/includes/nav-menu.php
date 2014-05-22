@@ -19,7 +19,7 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 	 * @param int    $depth  Depth of menu item. Used for padding.
 	 * @param array  $args   Not used.
 	 */
-	function start_lvl( &$output, $depth = 0, $args = array() ) {}
+	public function start_lvl( &$output, $depth = 0, $args = array() ) {}
 
 	/**
 	 * Ends the list of after the elements are added.
@@ -32,7 +32,7 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 	 * @param int    $depth  Depth of menu item. Used for padding.
 	 * @param array  $args   Not used.
 	 */
-	function end_lvl( &$output, $depth = 0, $args = array() ) {}
+	public function end_lvl( &$output, $depth = 0, $args = array() ) {}
 
 	/**
 	 * Start the element output.
@@ -46,7 +46,7 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 	 * @param array  $args   Not used.
 	 * @param int    $id     Not used.
 	 */
-	function start_el( &$output, $item, $depth = 0, $args = array(), $id = 0 ) {
+	public function start_el( &$output, $item, $depth = 0, $args = array(), $id = 0 ) {
 		global $_wp_nav_menu_max_depth;
 		$_wp_nav_menu_max_depth = $depth > $_wp_nav_menu_max_depth ? $depth : $_wp_nav_menu_max_depth;
 
@@ -231,12 +231,11 @@ class Walker_Nav_Menu_Edit extends Walker_Nav_Menu {
 /**
  * Create HTML list of nav menu input items.
  *
- * @package WordPress
  * @since 3.0.0
  * @uses Walker_Nav_Menu
  */
 class Walker_Nav_Menu_Checklist extends Walker_Nav_Menu {
-	function __construct( $fields = false ) {
+	public function __construct( $fields = false ) {
 		if ( $fields ) {
 			$this->db_fields = $fields;
 		}
@@ -253,7 +252,7 @@ class Walker_Nav_Menu_Checklist extends Walker_Nav_Menu {
 	 * @param int    $depth  Depth of page. Used for padding.
 	 * @param array  $args   Not used.
 	 */
-	function start_lvl( &$output, $depth = 0, $args = array() ) {
+	public function start_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
 		$output .= "\n$indent<ul class='children'>\n";
 	}
@@ -269,7 +268,7 @@ class Walker_Nav_Menu_Checklist extends Walker_Nav_Menu {
 	 * @param int    $depth  Depth of page. Used for padding.
 	 * @param array  $args   Not used.
 	 */
-	function end_lvl( &$output, $depth = 0, $args = array() ) {
+	public function end_lvl( &$output, $depth = 0, $args = array() ) {
 		$indent = str_repeat( "\t", $depth );
 		$output .= "\n$indent</ul>";
 	}
@@ -287,7 +286,7 @@ class Walker_Nav_Menu_Checklist extends Walker_Nav_Menu {
 	 * @param array  $args   Not used.
 	 * @param int    $id     Not used.
 	 */
-	function start_el( &$output, $item, $depth = 0, $args = array(), $id = 0 ) {
+	public function start_el( &$output, $item, $depth = 0, $args = array(), $id = 0 ) {
 		global $_nav_menu_placeholder;
 
 		$_nav_menu_placeholder = ( 0 > $_nav_menu_placeholder ) ? intval($_nav_menu_placeholder) - 1 : -1;
@@ -357,7 +356,6 @@ function _wp_ajax_menu_quick_search( $request = array() ) {
 				if ( 'markup' == $response_format ) {
 					echo walk_nav_menu_tree( array_map('wp_setup_nav_menu_item', array( get_post( $object_id ) ) ), 0, (object) $args );
 				} elseif ( 'json' == $response_format ) {
-					$post_obj = get_post( $object_id );
 					echo json_encode(
 						array(
 							'ID' => $object_id,
@@ -504,14 +502,16 @@ function wp_nav_menu_post_type_meta_boxes() {
 
 	foreach ( $post_types as $post_type ) {
 		/**
-		 * Filter whether a menu items meta box will be added for the current post type.
+		 * Filter whether a menu items meta box will be added for the current
+		 * object type.
 		 *
-		 * If a falsey value is returned instead of a post type object,
-		 * the post type menu items meta box will not be added.
+		 * If a falsey value is returned instead of an object, the menu items
+		 * meta box for the current meta box object will not be added.
 		 *
 		 * @since 3.0.0
 		 *
-		 * @param object $post_type The post type object to be used as a meta box.
+		 * @param object $meta_box_object The current object to add a menu items
+		 *                                meta box for.
 		 */
 		$post_type = apply_filters( 'nav_menu_meta_box_object', $post_type );
 		if ( $post_type ) {
@@ -535,16 +535,7 @@ function wp_nav_menu_taxonomy_meta_boxes() {
 		return;
 
 	foreach ( $taxonomies as $tax ) {
-		/**
-		 * Filter whether a menu items meta box will be added for the current taxonomy.
-		 *
-		 * If a falsey value is returned instead of a taxonomy object,
-		 * the taxonomy menu items meta box will not be added.
-		 *
-		 * @since 3.0.0
-		 *
-		 * @param object $tax The taxonomy object to be used as a meta box.
-		 */
+		/** This filter is documented in wp-admin/includes/nav-menu.php */
 		$tax = apply_filters( 'nav_menu_meta_box_object', $tax );
 		if ( $tax ) {
 			$id = $tax->name;
@@ -651,8 +642,6 @@ function wp_nav_menu_item_post_type_meta_box( $object, $post_type ) {
 		return;
 	}
 
-	$post_type_object = get_post_type_object($post_type_name);
-
 	$num_pages = $get_posts->max_num_pages;
 
 	$page_links = paginate_links( array(
@@ -670,9 +659,6 @@ function wp_nav_menu_item_post_type_meta_box( $object, $post_type ) {
 		'total' => $num_pages,
 		'current' => $pagenum
 	));
-
-	if ( !$posts )
-		$error = '<li id="error">'. $post_type['args']->labels->not_found .'</li>';
 
 	$db_fields = false;
 	if ( is_post_type_hierarchical( $post_type_name ) ) {
@@ -1173,12 +1159,12 @@ function wp_get_nav_menu_to_edit( $menu_id = 0 ) {
 			return $result . ' <ul class="menu" id="menu-to-edit"> </ul>';
 
 		/**
-		 * Filter the Walker class used to render a menu formatted for editing.
+		 * Filter the Walker class used when adding nav menu items.
 		 *
 		 * @since 3.0.0
 		 *
-		 * @param string $walker_class_name The Walker class used to render a menu formatted for editing.
-		 * @param int    $menu_id           The ID of the menu being rendered.
+		 * @param string $class   The walker class to use. Default 'Walker_Nav_Menu_Edit'.
+		 * @param int    $menu_id ID of the menu being rendered.
 		 */
 		$walker_class_name = apply_filters( 'wp_edit_nav_menu_walker', 'Walker_Nav_Menu_Edit', $menu_id );
 

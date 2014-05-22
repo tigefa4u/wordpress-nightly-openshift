@@ -18,7 +18,8 @@ function array_unique_noempty(a) {
 	return out;
 }
 
-(function($){
+( function($) {
+	var titleHasFocus = false;
 
 tagBox = {
 	clean : function(tags) {
@@ -309,9 +310,12 @@ $(document).on( 'heartbeat-send.refresh-lock', function( e, data ) {
 			$('#active_post_lock').val( received.new_lock );
 		}
 	}
+}).on( 'before-autosave.update-post-slug', function() {
+	titleHasFocus = document.activeElement && document.activeElement.id === 'title';
 }).on( 'after-autosave.update-post-slug', function() {
-	// create slug area only if not already there
-	if ( ! $('#edit-slug-box > *').length ) {
+	// Create slug area only if not already there
+	// and the title field was not focused (user was not typing a title) when autosave ran
+	if ( ! $('#edit-slug-box > *').length && ! titleHasFocus ) {
 		$.post( ajaxurl, {
 				action: 'sample-permalink',
 				post_id: $('#post_ID').val(),
@@ -370,7 +374,7 @@ $(document).on( 'heartbeat-send.refresh-lock', function( e, data ) {
 }(jQuery));
 
 jQuery(document).ready( function($) {
-	var stamp, visibility, $submitButtons, updateVisibility, updateText, $content,
+	var stamp, visibility, $submitButtons, updateVisibility, updateText,
 		sticky = '',
 		last = 0,
 		co = $('#content'),
@@ -482,15 +486,18 @@ jQuery(document).ready( function($) {
 
 	// This code is meant to allow tabbing from Title to Post content.
 	$('#title').on( 'keydown.editor-focus', function( event ) {
-		var editor;
+		var editor, $textarea;
 
 		if ( event.keyCode === 9 && ! event.ctrlKey && ! event.altKey && ! event.shiftKey ) {
 			editor = typeof tinymce != 'undefined' && tinymce.get('content');
+			$textarea = $('#content');
 
 			if ( editor && ! editor.isHidden() ) {
 				editor.focus();
+			} else if ( $textarea.length ) {
+				$textarea.focus();
 			} else {
-				$('#content').focus();
+				return;
 			}
 
 			event.preventDefault();
@@ -500,13 +507,22 @@ jQuery(document).ready( function($) {
 	// Autosave new posts after a title is typed
 	if ( $( '#auto_draft' ).val() ) {
 		$( '#title' ).blur( function() {
-			if ( ! this.value || $( '#auto_draft' ).val() !== '1' ) {
+			var cancel;
+
+			if ( ! this.value || $('#edit-slug-box > *').length ) {
 				return;
 			}
 
-			if ( wp.autosave ) {
-				wp.autosave.server.triggerSave();
-			}
+			// Cancel the autosave when the blur was triggered by the user submitting the form
+			$('form#post').one( 'submit', function() {
+				cancel = true;
+			});
+
+			window.setTimeout( function() {
+				if ( ! cancel && wp.autosave ) {
+					wp.autosave.server.triggerSave();
+				}
+			}, 200 );
 		});
 	}
 
@@ -1009,14 +1025,19 @@ jQuery(document).ready( function($) {
 
 			if ( mce ) {
 				editor.focus();
-				toolbarHeight = $( '#wp-content-editor-container .mce-toolbar-grp' ).height();
+				toolbarHeight = parseInt( $( '#wp-content-editor-container .mce-toolbar-grp' ).height(), 10 );
+
+				if ( toolbarHeight < 10 || toolbarHeight > 200 ) {
+					toolbarHeight = 30;
+				}
+
 				height = parseInt( $('#content_ifr').css('height'), 10 ) + toolbarHeight - 28;
 			} else {
 				$textarea.focus();
 				height = parseInt( $textarea.css('height'), 10 );
 			}
 
-			$document.off( 'mousemove.wp-editor-resize mouseup.wp-editor-resize' );
+			$document.off( '.wp-editor-resize' );
 
 			// sanity check
 			if ( height && height > 50 && height < 5000 ) {
@@ -1041,10 +1062,10 @@ jQuery(document).ready( function($) {
 			}
 
 			$document.on( 'mousemove.wp-editor-resize', dragging )
-				.on( 'mouseup.wp-editor-resize', endDrag );
+				.on( 'mouseup.wp-editor-resize mouseleave.wp-editor-resize', endDrag );
 
 			event.preventDefault();
-		});
+		}).on( 'mouseup.wp-editor-resize', endDrag );
 	})();
 
 	if ( typeof tinymce !== 'undefined' ) {
@@ -1061,30 +1082,6 @@ jQuery(document).ready( function($) {
 					editor.dom.addClass( body, format == 'post-format-0' ? 'post-format-standard' : format );
 				}
 			}
-		});
-	}
-
-	if ( ! ( 'ontouchstart' in window ) ) {
-		// When scrolling with mouse wheel or trackpad inside the Text editor, don't scroll the whole window
-		$content = $('#content').on( 'onwheel' in $document[0] ? 'wheel.text-editor-scroll' : 'mousewheel.text-editor-scroll', function( event ) {
-			var delta, origEvent = event.originalEvent;
-
-			if ( wp.editor && wp.editor.fullscreen.settings.visible ) {
-				return;
-			}
-
-			if ( typeof origEvent.deltaY !== 'undefined' ) {
-				delta = origEvent.deltaY;
-
-				if ( typeof origEvent.deltaMode !== 'undefined' && origEvent.deltaMode === origEvent.DOM_DELTA_LINE ) {
-					delta *= 20;
-				}
-			} else {
-				delta = -origEvent.wheelDelta;
-			}
-
-			$content.scrollTop( $content.scrollTop() + delta );
-			event.preventDefault();
 		});
 	}
 });

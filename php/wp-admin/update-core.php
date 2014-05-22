@@ -11,6 +11,7 @@ require_once( dirname( __FILE__ ) . '/admin.php' );
 
 wp_enqueue_style( 'plugin-install' );
 wp_enqueue_script( 'plugin-install' );
+wp_enqueue_script( 'updates' );
 add_thickbox();
 
 if ( is_multisite() && ! is_network_admin() ) {
@@ -173,12 +174,14 @@ function core_upgrade_preamble() {
 	if ( isset( $updates[0] ) && $updates[0]->response == 'development' ) {
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 		$upgrader = new WP_Automatic_Updater;
-		if ( wp_http_supports( 'ssl' ) && $upgrader->should_update( 'core', $updates[0], ABSPATH ) )
-			echo '<div class="updated inline"><p><strong>BETA TESTERS:</strong> This site is set up to install updates of future beta versions automatically.</p></div>';
+		if ( wp_http_supports( 'ssl' ) && $upgrader->should_update( 'core', $updates[0], ABSPATH ) ) {
+			echo '<div class="updated inline"><p>';
+			echo '<strong>' . __( 'BETA TESTERS:' ) . '</strong> ' . __( 'This site is set up to install updates of future beta versions automatically.' );
+			echo '</p></div>';
+		}
 	}
 
 	echo '<ul class="core-updates">';
-	$alternate = true;
 	foreach( (array) $updates as $update ) {
 		echo '<li>';
 		list_core_update( $update );
@@ -360,7 +363,7 @@ function list_translation_updates() {
 function do_core_upgrade( $reinstall = false ) {
 	global $wp_filesystem;
 
-	include_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+	include_once( ABSPATH . 'wp-admin/includes/class-wp-upgrader.php' );
 
 	if ( $reinstall )
 		$url = 'update-core.php?action=do-core-reinstall';
@@ -457,7 +460,7 @@ if ( ( 'do-theme-upgrade' == $action || ( 'do-plugin-upgrade' == $action && ! is
 }
 
 $title = __('WordPress Updates');
-$parent_file = 'tools.php';
+$parent_file = 'index.php';
 
 $updates_overview  = '<p>' . __( 'On this screen, you can update to the latest version of WordPress, as well as update your themes and plugins from the WordPress.org repositories.' ) . '</p>';
 $updates_overview .= '<p>' . __( 'If an update is available, you&#8127;ll see a notification appear in the Toolbar and navigation menu.' ) . ' ' . __( 'Keeping your site updated is important for security. It also makes the internet a safer place for you and your readers.' ) . '</p>';
@@ -484,7 +487,7 @@ get_current_screen()->add_help_tab( array(
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
 	'<p>' . __( '<a href="http://codex.wordpress.org/Dashboard_Updates_Screen" target="_blank">Documentation on Updating WordPress</a>' ) . '</p>' .
-	'<p>' . __( '<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>' ) . '</p>'
+	'<p>' . __( '<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>' ) . '</p>'
 );
 
 if ( 'upgrade-core' == $action ) {
@@ -579,7 +582,7 @@ if ( 'upgrade-core' == $action ) {
 	require_once(ABSPATH . 'wp-admin/admin-header.php');
 	echo '<div class="wrap">';
 	echo '<h2>' . esc_html__('Update Plugins') . '</h2>';
-	echo "<iframe src='$url' style='width: 100%; height: 100%; min-height: 750px;' frameborder='0'></iframe>";
+	echo '<iframe src="', $url, '" style="width: 100%; height: 100%; min-height: 750px;" frameborder="0"></iframe>';
 	echo '</div>';
 	include(ABSPATH . 'wp-admin/admin-footer.php');
 
@@ -605,10 +608,12 @@ if ( 'upgrade-core' == $action ) {
 	$title = __('Update Themes');
 
 	require_once(ABSPATH . 'wp-admin/admin-header.php');
-	echo '<div class="wrap">';
-	echo '<h2>' . esc_html__('Update Themes') . '</h2>';
-	echo "<iframe src='$url' style='width: 100%; height: 100%; min-height: 750px;' frameborder='0'></iframe>";
-	echo '</div>';
+	?>
+	<div class="wrap">
+		<h2><?php echo esc_html__('Update Themes') ?></h2>
+		<iframe src="<?php echo $url ?>" style="width: 100%; height: 100%; min-height: 750px;" frameborder="0"></iframe>
+	</div>
+	<?php
 	include(ABSPATH . 'wp-admin/admin-footer.php');
 
 } elseif ( 'do-translation-upgrade' == $action ) {
